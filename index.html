@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4SightAnalytics | Data Science & Manufacturing Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">4SIGHT<span>Analytics</span></div>
+  <ul>
+    <li><a href="#services" data-i18n="nav.services">Services</a></li>
+    <li><a href="#industries" data-i18n="nav.industries">Industries</a></li>
+    <li><a href="#process" data-i18n="nav.process">Process</a></li>
+    <li><a href="#contact" data-i18n="nav.contact">Contact</a></li>
+  </ul>
+  <div class="lang-switcher">
+    <button class="lang-btn active" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" onclick="setLang('de')">DE</button>
+    <button class="lang-btn" onclick="setLang('es')">ES</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <p class="hero-tag" data-i18n="hero.tag">// Data Science & Manufacturing Intelligence</p>
+  <h1 data-i18n-html="hero.h1">TRANSFORM<br><em>DATA</em><br>INTO POWER</h1>
+  <p class="hero-sub" data-i18n="hero.sub">We engineer intelligence for manufacturers. Predictive systems, digital twins, and AI-driven quality control — built for the factory floor.</p>
+  <div class="hero-ctas">
+    <a href="#contact" class="btn-primary" data-i18n="hero.cta1">Start a Project</a>
+    <a href="#services" class="btn-outline" data-i18n="hero.cta2">Our Services</a>
+  </div>
+
+  <!-- Animated hex grid -->
+  <div class="hero-visual">
+    <div class="hex-grid" id="hexGrid"></div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item" style="--d:0.2s">
+    <span class="stat-num">98%</span>
+    <span class="stat-label" data-i18n="stats.accuracy">Prediction Accuracy</span>
+  </div>
+  <div class="stat-item" style="--d:0.35s">
+    <span class="stat-num">12+</span>
+    <span class="stat-label" data-i18n="stats.years">Years Experience</span>
+  </div>
+  <div class="stat-item" style="--d:0.5s">
+    <span class="stat-num">240</span>
+    <span class="stat-label" data-i18n="stats.projects">Projects Delivered</span>
+  </div>
+  <div class="stat-item" style="--d:0.65s">
+    <span class="stat-num">4×</span>
+    <span class="stat-label" data-i18n="stats.roi">Average ROI</span>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker" id="ticker"></div>
+</div>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="section-tag" data-i18n="services.tag">// What We Do</div>
+  <h2 data-i18n-html="services.h2">INTELLIGENT <span>SOLUTIONS</span></h2>
+  <p class="section-intro reveal" data-i18n="services.intro">From raw sensor data to actionable decisions — we build end-to-end AI and analytics systems tailored to manufacturing environments.</p>
+
+  <div class="services-grid">
+    <div class="service-card reveal">
+      <span class="service-icon">🧠</span>
+      <div class="service-title" data-i18n="services.s1.title">Predictive Maintenance</div>
+      <p class="service-desc" data-i18n="services.s1.desc">Machine learning models trained on your sensor data to predict equipment failures before they happen — reducing downtime by up to 70%.</p>
+      <span class="service-num">01</span>
+    </div>
+    <div class="service-card reveal">
+      <span class="service-icon">⚙️</span>
+      <div class="service-title" data-i18n="services.s2.title">Digital Twin</div>
+      <p class="service-desc" data-i18n="services.s2.desc">Real-time virtual replicas of your production lines. Simulate, optimize, and test changes in a risk-free environment.</p>
+      <span class="service-num">02</span>
+    </div>
+    <div class="service-card reveal">
+      <span class="service-icon">🔍</span>
+      <div class="service-title" data-i18n="services.s3.title">Quality Intelligence</div>
+      <p class="service-desc" data-i18n="services.s3.desc">Computer vision and statistical process control systems that detect defects at microscopic scale — faster and more reliably than manual inspection.</p>
+      <span class="service-num">03</span>
+    </div>
+    <div class="service-card reveal">
+      <span class="service-icon">📊</span>
+      <div class="service-title" data-i18n="services.s4.title">Production Analytics</div>
+      <p class="service-desc" data-i18n="services.s4.desc">Real-time dashboards and OEE tracking systems that give every level of your organization clear, actionable visibility into operations.</p>
+      <span class="service-num">04</span>
+    </div>
+    <div class="service-card reveal">
+      <span class="service-icon">🔗</span>
+      <div class="service-title" data-i18n="services.s5.title">IIoT Integration</div>
+      <p class="service-desc" data-i18n="services.s5.desc">Connecting your machines, sensors, and enterprise systems into a unified data platform — the foundation for Industry 4.0 transformation.</p>
+      <span class="service-num">05</span>
+    </div>
+    <div class="service-card reveal">
+      <span class="service-icon">🚀</span>
+      <div class="service-title" data-i18n="services.s6.title">AI Strategy</div>
+      <p class="service-desc" data-i18n="services.s6.desc">Executive-level roadmaps and maturity assessments to build a sustainable, competitive AI-driven manufacturing capability.</p>
+      <span class="service-num">06</span>
+    </div>
+  </div>
+</section>
+
+<!-- INDUSTRIES -->
+<section id="industries">
+  <div class="industries-layout">
+    <div>
+      <div class="section-tag" data-i18n="industries.tag">// Sectors</div>
+      <h2 data-i18n-html="industries.h2">INDUSTRY <span>FOCUS</span></h2>
+      <p class="section-intro reveal" data-i18n="industries.intro">Deep domain expertise across the most data-intensive manufacturing verticals.</p>
+      <ul class="industry-list">
+        <li class="industry-item reveal">
+          <div class="industry-dot"></div>
+          <span class="industry-name" data-i18n="ind.auto">Automotive</span>
+          <span class="industry-tag">OEM / TIER 1</span>
+        </li>
+        <li class="industry-item reveal">
+          <div class="industry-dot"></div>
+          <span class="industry-name" data-i18n="ind.aero">Aerospace</span>
+          <span class="industry-tag">AS9100</span>
+        </li>
+        <li class="industry-item reveal">
+          <div class="industry-dot"></div>
+          <span class="industry-name" data-i18n="ind.pharma">Pharma & MedTech</span>
+          <span class="industry-tag">FDA / GMP</span>
+        </li>
+        <li class="industry-item reveal">
+          <div class="industry-dot"></div>
+          <span class="industry-name" data-i18n="ind.energy">Energy & Utilities</span>
+          <span class="industry-tag">IEC 61850</span>
+        </li>
+        <li class="industry-item reveal">
+          <div class="industry-dot"></div>
+          <span class="industry-name" data-i18n="ind.semicon">Semiconductor</span>
+          <span class="industry-tag">SEMI E10</span>
+        </li>
+        <li class="industry-item reveal">
+          <div class="industry-dot"></div>
+          <span class="industry-name" data-i18n="ind.fmcg">FMCG</span>
+          <span class="industry-tag">CPG</span>
+        </li>
+      </ul>
+    </div>
+    <div class="chart-visual reveal">
+      <p class="section-tag" style="margin-bottom:1.5rem" data-i18n="chart.title">// Avg. Efficiency Gains</p>
+      <div class="chart-bar-group">
+        <span class="chart-label" data-i18n="chart.oee">OEE Improvement</span>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="--w:82%;--d:0.2s"><span class="chart-bar-val">+82%</span></div></div>
+      </div>
+      <div class="chart-bar-group">
+        <span class="chart-label" data-i18n="chart.downtime">Downtime Reduction</span>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="--w:70%;--d:0.4s"><span class="chart-bar-val">−70%</span></div></div>
+      </div>
+      <div class="chart-bar-group">
+        <span class="chart-label" data-i18n="chart.defects">Defect Rate Reduction</span>
+        <div class="chart-bar-track"><div class="chart-bar-fill orange" style="--w:65%;--d:0.6s"><span class="chart-bar-val">−65%</span></div></div>
+      </div>
+      <div class="chart-bar-group">
+        <span class="chart-label" data-i18n="chart.cost">Maintenance Cost Savings</span>
+        <div class="chart-bar-track"><div class="chart-bar-fill" style="--w:55%;--d:0.8s"><span class="chart-bar-val">−55%</span></div></div>
+      </div>
+      <div class="chart-bar-group">
+        <span class="chart-label" data-i18n="chart.throughput">Throughput Increase</span>
+        <div class="chart-bar-track"><div class="chart-bar-fill orange" style="--w:45%;--d:1s"><span class="chart-bar-val">+45%</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process">
+  <div class="section-tag" data-i18n="process.tag">// Methodology</div>
+  <h2 data-i18n-html="process.h2">HOW WE <span>WORK</span></h2>
+  <p class="section-intro reveal" data-i18n="process.intro">A rigorous, structured approach that delivers measurable results in 90 days or less.</p>
+
+  <div class="process-steps">
+    <div class="process-step reveal">
+      <div class="step-circle">01</div>
+      <div class="step-title" data-i18n="proc.s1">Diagnose</div>
+      <p class="step-desc" data-i18n="proc.d1">Deep-dive audit of your data, systems, and processes to identify high-value AI opportunities.</p>
+    </div>
+    <div class="process-step reveal">
+      <div class="step-circle">02</div>
+      <div class="step-title" data-i18n="proc.s2">Design</div>
+      <p class="step-desc" data-i18n="proc.d2">Architecture and roadmap tailored to your infrastructure, team, and strategic objectives.</p>
+    </div>
+    <div class="process-step reveal">
+      <div class="step-circle">03</div>
+      <div class="step-title" data-i18n="proc.s3">Build</div>
+      <p class="step-desc" data-i18n="proc.d3">Agile development of models and pipelines, with weekly sprint reviews and continuous feedback.</p>
+    </div>
+    <div class="process-step reveal">
+      <div class="step-circle">04</div>
+      <div class="step-title" data-i18n="proc.s4">Deploy</div>
+      <p class="step-desc" data-i18n="proc.d4">Production-grade deployment with full integration into your MES, ERP, and SCADA systems.</p>
+    </div>
+    <div class="process-step reveal">
+      <div class="step-circle">05</div>
+      <div class="step-title" data-i18n="proc.s5">Scale</div>
+      <p class="step-desc" data-i18n="proc.d5">Continuous model monitoring, retraining, and expansion across your entire facility network.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-layout">
+    <div>
+      <div class="section-tag" data-i18n="contact.tag">// Get Started</div>
+      <h2 data-i18n-html="contact.h2">LET'S <span>TALK</span></h2>
+      <p class="section-intro" data-i18n="contact.intro">Tell us about your challenge. We'll respond within 24 hours with a tailored assessment.</p>
+      <div class="contact-info">
+        <div class="contact-info-item">
+          <span class="info-label" data-i18n="contact.email_label">Email</span>
+          <span class="info-val">hello@4SightAnalytics.net</span>
+        </div>
+        <div class="contact-info-item">
+          <span class="info-label" data-i18n="contact.phone_label">Phone</span>
+          <span class="info-val">+49 89 12345 678</span>
+        </div>
+        <div class="contact-info-item">
+          <span class="info-label" data-i18n="contact.hq_label">Headquarters</span>
+          <span class="info-val">Munich, Germany<br>Barcelona, Spain<br>London, UK</span>
+        </div>
+      </div>
+    </div>
+    <form class="contact-form" onsubmit="handleSubmit(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label data-i18n="form.fname">First Name</label>
+          <input type="text" placeholder="Max" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="form.lname">Last Name</label>
+          <input type="text" placeholder="Müller" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="form.email">Business Email</label>
+        <input type="email" placeholder="max@company.com" required>
+      </div>
+      <div class="form-group">
+        <label data-i18n="form.company">Company</label>
+        <input type="text" placeholder="ACME Manufacturing GmbH">
+      </div>
+      <div class="form-group">
+        <label data-i18n="form.interest">Area of Interest</label>
+        <select>
+          <option data-i18n="form.opt1">Predictive Maintenance</option>
+          <option data-i18n="form.opt2">Quality Intelligence</option>
+          <option data-i18n="form.opt3">Digital Twin</option>
+          <option data-i18n="form.opt4">IIoT Integration</option>
+          <option data-i18n="form.opt5">AI Strategy</option>
+          <option data-i18n="form.opt6">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="form.message">Message</label>
+        <textarea placeholder="Describe your challenge..." data-i18n-placeholder="form.placeholder"></textarea>
+      </div>
+      <button type="submit" class="btn-primary" data-i18n="form.submit">Send Message</button>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-copy">© 2026 4SightAnalytics. <span data-i18n="footer.rights">All rights reserved.</span></span>
+  <ul class="footer-links">
+    <li><a href="#" data-i18n="footer.privacy">Privacy Policy</a></li>
+    <li><a href="#" data-i18n="footer.imprint">Imprint</a></li>
+    <li><a href="#" data-i18n="footer.terms">Terms</a></li>
+  </ul>
+</footer>
+
+<script>
+// ---- I18N DATA ----
+const translations = {
+  en: {
+    "nav.services": "Services",
+    "nav.industries": "Industries",
+    "nav.process": "Process",
+    "nav.contact": "Contact",
+    "hero.tag": "// Data Science & Manufacturing Intelligence",
+    "hero.h1": "TRANSFORM<br><em>DATA</em><br>INTO POWER",
+    "hero.sub": "We engineer intelligence for manufacturers. Predictive systems, digital twins, and AI-driven quality control — built for the factory floor.",
+    "hero.cta1": "Start a Project",
+    "hero.cta2": "Our Services",
+    "stats.accuracy": "Prediction Accuracy",
+    "stats.years": "Years Experience",
+    "stats.projects": "Projects Delivered",
+    "stats.roi": "Average ROI",
+    "services.tag": "// What We Do",
+    "services.h2": "INTELLIGENT <span>SOLUTIONS</span>",
+    "services.intro": "From raw sensor data to actionable decisions — we build end-to-end AI and analytics systems tailored to manufacturing environments.",
+    "services.s1.title": "Predictive Maintenance",
+    "services.s1.desc": "Machine learning models trained on your sensor data to predict equipment failures before they happen — reducing downtime by up to 70%.",
+    "services.s2.title": "Digital Twin",
+    "services.s2.desc": "Real-time virtual replicas of your production lines. Simulate, optimize, and test changes in a risk-free environment.",
+    "services.s3.title": "Quality Intelligence",
+    "services.s3.desc": "Computer vision and statistical process control systems that detect defects at microscopic scale — faster and more reliably than manual inspection.",
+    "services.s4.title": "Production Analytics",
+    "services.s4.desc": "Real-time dashboards and OEE tracking systems that give every level of your organization clear, actionable visibility into operations.",
+    "services.s5.title": "IIoT Integration",
+    "services.s5.desc": "Connecting your machines, sensors, and enterprise systems into a unified data platform — the foundation for Industry 4.0 transformation.",
+    "services.s6.title": "AI Strategy",
+    "services.s6.desc": "Executive-level roadmaps and maturity assessments to build a sustainable, competitive AI-driven manufacturing capability.",
+    "industries.tag": "// Sectors",
+    "industries.h2": "INDUSTRY <span>FOCUS</span>",
+    "industries.intro": "Deep domain expertise across the most data-intensive manufacturing verticals.",
+    "ind.auto": "Automotive",
+    "ind.aero": "Aerospace",
+    "ind.pharma": "Pharma & MedTech",
+    "ind.energy": "Energy & Utilities",
+    "ind.semicon": "Semiconductor",
+    "ind.fmcg": "FMCG",
+    "chart.title": "// Avg. Efficiency Gains",
+    "chart.oee": "OEE Improvement",
+    "chart.downtime": "Downtime Reduction",
+    "chart.defects": "Defect Rate Reduction",
+    "chart.cost": "Maintenance Cost Savings",
+    "chart.throughput": "Throughput Increase",
+    "process.tag": "// Methodology",
+    "process.h2": "HOW WE <span>WORK</span>",
+    "process.intro": "A rigorous, structured approach that delivers measurable results in 90 days or less.",
+    "proc.s1": "Diagnose", "proc.d1": "Deep-dive audit of your data, systems, and processes to identify high-value AI opportunities.",
+    "proc.s2": "Design", "proc.d2": "Architecture and roadmap tailored to your infrastructure, team, and strategic objectives.",
+    "proc.s3": "Build", "proc.d3": "Agile development of models and pipelines, with weekly sprint reviews and continuous feedback.",
+    "proc.s4": "Deploy", "proc.d4": "Production-grade deployment with full integration into your MES, ERP, and SCADA systems.",
+    "proc.s5": "Scale", "proc.d5": "Continuous model monitoring, retraining, and expansion across your entire facility network.",
+    "contact.tag": "// Get Started",
+    "contact.h2": "LET'S <span>TALK</span>",
+    "contact.intro": "Tell us about your challenge. We'll respond within 24 hours with a tailored assessment.",
+    "contact.email_label": "Email",
+    "contact.phone_label": "Phone",
+    "contact.hq_label": "Headquarters",
+    "form.fname": "First Name", "form.lname": "Last Name",
+    "form.email": "Business Email", "form.company": "Company",
+    "form.interest": "Area of Interest",
+    "form.opt1": "Predictive Maintenance", "form.opt2": "Quality Intelligence",
+    "form.opt3": "Digital Twin", "form.opt4": "IIoT Integration",
+    "form.opt5": "AI Strategy", "form.opt6": "Other",
+    "form.message": "Message", "form.placeholder": "Describe your challenge...",
+    "form.submit": "Send Message",
+    "footer.rights": "All rights reserved.",
+    "footer.privacy": "Privacy Policy", "footer.imprint": "Imprint", "footer.terms": "Terms"
+  },
+  de: {
+    "nav.services": "Leistungen",
+    "nav.industries": "Branchen",
+    "nav.process": "Vorgehen",
+    "nav.contact": "Kontakt",
+    "hero.tag": "// Data Science & Fertigungstechnik",
+    "hero.h1": "DATEN IN<br><em>STÄRKE</em><br>VERWANDELN",
+    "hero.sub": "Wir entwickeln KI-Lösungen für Fertigungsunternehmen. Prädiktive Systeme, digitale Zwillinge und KI-gestützte Qualitätskontrolle — direkt aus der Praxis.",
+    "hero.cta1": "Projekt starten",
+    "hero.cta2": "Unsere Leistungen",
+    "stats.accuracy": "Vorhersagegenauigkeit",
+    "stats.years": "Jahre Erfahrung",
+    "stats.projects": "Abgeschlossene Projekte",
+    "stats.roi": "Durchschnittlicher ROI",
+    "services.tag": "// Was wir tun",
+    "services.h2": "INTELLIGENTE <span>LÖSUNGEN</span>",
+    "services.intro": "Von Rohdaten bis zur Entscheidung — wir bauen durchgängige KI- und Analysesysteme für die Fertigungsindustrie.",
+    "services.s1.title": "Vorausschauende Wartung",
+    "services.s1.desc": "Machine-Learning-Modelle, trainiert auf Ihren Sensordaten, prognostizieren Anlagenausfälle bevor sie auftreten — bis zu 70 % weniger Stillstandzeiten.",
+    "services.s2.title": "Digitaler Zwilling",
+    "services.s2.desc": "Virtuelle Echtzeit-Abbilder Ihrer Produktionslinien. Simulieren, optimieren und testen Sie Veränderungen risikofrei.",
+    "services.s3.title": "Qualitätsintelligenz",
+    "services.s3.desc": "Computer-Vision- und SPC-Systeme, die Defekte auf mikroskopischer Ebene erkennen — schneller und zuverlässiger als manuelle Inspektion.",
+    "services.s4.title": "Produktionsanalytik",
+    "services.s4.desc": "Echtzeit-Dashboards und OEE-Tracking-Systeme für klare, handlungsfähige Transparenz auf allen Unternehmensebenen.",
+    "services.s5.title": "IIoT-Integration",
+    "services.s5.desc": "Verbindung Ihrer Maschinen, Sensoren und ERP-Systeme zu einer einheitlichen Datenplattform — die Grundlage für Industrie 4.0.",
+    "services.s6.title": "KI-Strategie",
+    "services.s6.desc": "Roadmaps und Reifegradbewertungen auf Führungsebene für eine nachhaltige, wettbewerbsfähige KI-Kompetenz.",
+    "industries.tag": "// Sektoren",
+    "industries.h2": "BRANCHEN <span>FOKUS</span>",
+    "industries.intro": "Tiefes Domänenwissen in den datenintensivsten Fertigungsbranchen.",
+    "ind.auto": "Automobilindustrie",
+    "ind.aero": "Luft- und Raumfahrt",
+    "ind.pharma": "Pharma & Medizintechnik",
+    "ind.energy": "Energie & Versorgung",
+    "ind.semicon": "Halbleiter",
+    "ind.fmcg": "FMCG",
+    "chart.title": "// Ø Effizienzgewinne",
+    "chart.oee": "OEE-Verbesserung",
+    "chart.downtime": "Stillstandsreduktion",
+    "chart.defects": "Fehlerrate Reduktion",
+    "chart.cost": "Wartungskosten Einsparung",
+    "chart.throughput": "Durchsatzsteigerung",
+    "process.tag": "// Methodik",
+    "process.h2": "WIE WIR <span>ARBEITEN</span>",
+    "process.intro": "Ein rigoroser, strukturierter Ansatz, der messbare Ergebnisse in 90 Tagen oder weniger liefert.",
+    "proc.s1": "Diagnose", "proc.d1": "Tiefe Analyse Ihrer Daten, Systeme und Prozesse zur Identifikation der wertvollsten KI-Potenziale.",
+    "proc.s2": "Konzept", "proc.d2": "Architektur und Roadmap, maßgeschneidert auf Ihre Infrastruktur, Ihr Team und Ihre strategischen Ziele.",
+    "proc.s3": "Entwicklung", "proc.d3": "Agile Entwicklung von Modellen und Pipelines mit wöchentlichen Sprint-Reviews und kontinuierlichem Feedback.",
+    "proc.s4": "Einführung", "proc.d4": "Produktionsreife Bereitstellung mit vollständiger Integration in Ihre MES-, ERP- und SCADA-Systeme.",
+    "proc.s5": "Skalierung", "proc.d5": "Kontinuierliches Modell-Monitoring, Nachtraining und Ausweitung über Ihr gesamtes Werknetz.",
+    "contact.tag": "// Jetzt starten",
+    "contact.h2": "SPRECHEN WIR <span>MITEINANDER</span>",
+    "contact.intro": "Schildern Sie uns Ihre Herausforderung. Wir melden uns innerhalb von 24 Stunden mit einer maßgeschneiderten Einschätzung.",
+    "contact.email_label": "E-Mail",
+    "contact.phone_label": "Telefon",
+    "contact.hq_label": "Standorte",
+    "form.fname": "Vorname", "form.lname": "Nachname",
+    "form.email": "Geschäftliche E-Mail", "form.company": "Unternehmen",
+    "form.interest": "Interessensgebiet",
+    "form.opt1": "Vorausschauende Wartung", "form.opt2": "Qualitätsintelligenz",
+    "form.opt3": "Digitaler Zwilling", "form.opt4": "IIoT-Integration",
+    "form.opt5": "KI-Strategie", "form.opt6": "Sonstiges",
+    "form.message": "Nachricht", "form.placeholder": "Beschreiben Sie Ihre Herausforderung...",
+    "form.submit": "Nachricht senden",
+    "footer.rights": "Alle Rechte vorbehalten.",
+    "footer.privacy": "Datenschutz", "footer.imprint": "Impressum", "footer.terms": "AGB"
+  },
+  es: {
+    "nav.services": "Servicios",
+    "nav.industries": "Sectores",
+    "nav.process": "Metodología",
+    "nav.contact": "Contacto",
+    "hero.tag": "// Ciencia de Datos & Tecnología de Fabricación",
+    "hero.h1": "CONVIERTE <em>DATOS</em><br>EN PODER",
+    "hero.sub": "Desarrollamos inteligencia para fabricantes. Sistemas predictivos, gemelos digitales y control de calidad con IA — diseñados para la planta industrial.",
+    "hero.cta1": "Iniciar Proyecto",
+    "hero.cta2": "Nuestros Servicios",
+    "stats.accuracy": "Precisión Predictiva",
+    "stats.years": "Años de Experiencia",
+    "stats.projects": "Proyectos Entregados",
+    "stats.roi": "ROI Promedio",
+    "services.tag": "// Lo que hacemos",
+    "services.h2": "SOLUCIONES <span>INTELIGENTES</span>",
+    "services.intro": "De datos brutos a decisiones accionables — construimos sistemas de IA y analítica de extremo a extremo para entornos de fabricación.",
+    "services.s1.title": "Mantenimiento Predictivo",
+    "services.s1.desc": "Modelos de machine learning entrenados con sus datos de sensores para predecir fallos de equipos antes de que ocurran — reduciendo el tiempo de inactividad hasta un 70%.",
+    "services.s2.title": "Gemelo Digital",
+    "services.s2.desc": "Réplicas virtuales en tiempo real de sus líneas de producción. Simule, optimice y pruebe cambios en un entorno sin riesgos.",
+    "services.s3.title": "Inteligencia de Calidad",
+    "services.s3.desc": "Sistemas de visión artificial y control estadístico de procesos que detectan defectos a escala microscópica — más rápido y fiable que la inspección manual.",
+    "services.s4.title": "Analítica de Producción",
+    "services.s4.desc": "Dashboards en tiempo real y seguimiento OEE que brindan a cada nivel de su organización visibilidad clara y accionable.",
+    "services.s5.title": "Integración IIoT",
+    "services.s5.desc": "Conectamos sus máquinas, sensores y sistemas empresariales en una plataforma de datos unificada — la base para la transformación Industria 4.0.",
+    "services.s6.title": "Estrategia de IA",
+    "services.s6.desc": "Hojas de ruta y evaluaciones de madurez a nivel ejecutivo para construir una capacidad de fabricación impulsada por IA sostenible y competitiva.",
+    "industries.tag": "// Sectores",
+    "industries.h2": "FOCO EN <span>INDUSTRIA</span>",
+    "industries.intro": "Profundo conocimiento de dominio en los sectores de fabricación más intensivos en datos.",
+    "ind.auto": "Automoción",
+    "ind.aero": "Aeroespacial",
+    "ind.pharma": "Farma & MedTech",
+    "ind.energy": "Energía & Utilities",
+    "ind.semicon": "Semiconductores",
+    "ind.fmcg": "Bienes de Consumo",
+    "chart.title": "// Ganancias Promedio de Eficiencia",
+    "chart.oee": "Mejora OEE",
+    "chart.downtime": "Reducción de Paradas",
+    "chart.defects": "Reducción Tasa de Defectos",
+    "chart.cost": "Ahorro en Mantenimiento",
+    "chart.throughput": "Aumento de Throughput",
+    "process.tag": "// Metodología",
+    "process.h2": "CÓMO <span>TRABAJAMOS</span>",
+    "process.intro": "Un enfoque riguroso y estructurado que entrega resultados medibles en 90 días o menos.",
+    "proc.s1": "Diagnóstico", "proc.d1": "Auditoría profunda de sus datos, sistemas y procesos para identificar oportunidades de alto valor con IA.",
+    "proc.s2": "Diseño", "proc.d2": "Arquitectura y hoja de ruta adaptadas a su infraestructura, equipo y objetivos estratégicos.",
+    "proc.s3": "Desarrollo", "proc.d3": "Desarrollo ágil de modelos y pipelines con revisiones semanales de sprint y feedback continuo.",
+    "proc.s4": "Despliegue", "proc.d4": "Implementación en producción con integración completa en sus sistemas MES, ERP y SCADA.",
+    "proc.s5": "Escala", "proc.d5": "Monitoreo continuo del modelo, reentrenamiento y expansión a través de toda su red de instalaciones.",
+    "contact.tag": "// Empecemos",
+    "contact.h2": "HABLEMOS <span>HOY</span>",
+    "contact.intro": "Cuéntenos su desafío. Responderemos en 24 horas con una evaluación personalizada.",
+    "contact.email_label": "Email",
+    "contact.phone_label": "Teléfono",
+    "contact.hq_label": "Sede",
+    "form.fname": "Nombre", "form.lname": "Apellido",
+    "form.email": "Email Corporativo", "form.company": "Empresa",
+    "form.interest": "Área de Interés",
+    "form.opt1": "Mantenimiento Predictivo", "form.opt2": "Inteligencia de Calidad",
+    "form.opt3": "Gemelo Digital", "form.opt4": "Integración IIoT",
+    "form.opt5": "Estrategia de IA", "form.opt6": "Otro",
+    "form.message": "Mensaje", "form.placeholder": "Describa su desafío...",
+    "form.submit": "Enviar Mensaje",
+    "footer.rights": "Todos los derechos reservados.",
+    "footer.privacy": "Política de Privacidad", "footer.imprint": "Aviso Legal", "footer.terms": "Condiciones"
+  }
+};
+
+// Ticker content per language
+const tickerContent = {
+  en: ["Predictive Maintenance", "Digital Twin", "Machine Learning", "Industry 4.0", "Quality Intelligence", "IIoT Integration", "Data Science", "Computer Vision", "OEE Optimization", "AI Strategy"],
+  de: ["Vorausschauende Wartung", "Digitaler Zwilling", "Machine Learning", "Industrie 4.0", "Qualitätsintelligenz", "IIoT-Integration", "Data Science", "Computer Vision", "OEE-Optimierung", "KI-Strategie"],
+  es: ["Mantenimiento Predictivo", "Gemelo Digital", "Machine Learning", "Industria 4.0", "Inteligencia de Calidad", "Integración IIoT", "Ciencia de Datos", "Visión Artificial", "Optimización OEE", "Estrategia IA"]
+};
+
+let currentLang = 'en';
+
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    if (b.textContent.toLowerCase() === lang) b.classList.add('active');
+  });
+
+  const t = translations[lang];
+
+  // Text elements
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key]) el.textContent = t[key];
+  });
+
+  // HTML elements
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.getAttribute('data-i18n-html');
+    if (t[key]) el.innerHTML = t[key];
+  });
+
+  // Placeholder
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (t[key]) el.placeholder = t[key];
+  });
+
+  buildTicker(lang);
+}
+
+function buildTicker(lang) {
+  const words = tickerContent[lang] || tickerContent.en;
+  const doubled = [...words, ...words];
+  const ticker = document.getElementById('ticker');
+  ticker.innerHTML = doubled.map(w => `<div class="ticker-item"><span>◆</span>${w}</div>`).join('');
+}
+
+// ---- HEX GRID ----
+function buildHexGrid() {
+  const grid = document.getElementById('hexGrid');
+  const total = 36;
+  const accentIndices = [2,7,13,18,22,27,31];
+  const accent2Indices = [4,11,25];
+  const brightIndices = [18];
+
+  for (let i = 0; i < total; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'hex-cell';
+    if (brightIndices.includes(i)) cell.classList.add('bright');
+    else if (accentIndices.includes(i)) cell.classList.add('accent');
+    else if (accent2Indices.includes(i)) cell.classList.add('accent2');
+
+    const dur = (2.5 + Math.random() * 3).toFixed(1);
+    const del = (Math.random() * 2).toFixed(2);
+    cell.style.setProperty('--duration', dur + 's');
+    cell.style.setProperty('--delay', del + 's');
+    grid.appendChild(cell);
+  }
+}
+
+// ---- SCROLL REVEAL ----
+function initScrollReveal() {
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+}
+
+// ---- FORM SUBMIT ----
+function handleSubmit(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.textContent = '✓ Sent!';
+  btn.style.background = '#00d4aa';
+  setTimeout(() => {
+    btn.textContent = translations[currentLang]['form.submit'];
+    btn.style.background = '';
+    e.target.reset();
+  }, 3000);
+}
+
+// ---- INIT ----
+buildHexGrid();
+buildTicker('en');
+initScrollReveal();
+</script>
+</body>
+</html>
