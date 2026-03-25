@@ -1,0 +1,22 @@
+node_modules/
+.env
+.DS_Store
+npm-debug.log*
+
+# Local env files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local   
+
+# credential files
+control/credencials_rdf.json
+
+
+# files
+*.mp4
+*.avi
+*.mkv
+*.mov
+*.flv
+*.wmv
