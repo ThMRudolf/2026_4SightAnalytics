@@ -344,6 +344,14 @@
     </button>
   </li>
 
+  <!-- Tab 5: Produktion (IE-Analyse) -->
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-production" type="button" role="tab">
+      <i class="bi bi-bar-chart-steps me-1"></i>
+      <span data-i18n="tabProduction">PRODUKTION</span>
+    </button>
+  </li>
+
 </ul><!-- /nav nav-tabs -->
 
 
@@ -870,6 +878,260 @@
     </div><!-- /row Sensor -->
   </div><!-- /tab-sensor -->
 
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- TAB 5 — PRODUKTION                                                  -->
+  <!-- IE-relevante Kennzahlen: OEE, Werkzeugverschleiß, Kühlmittel,      -->
+  <!-- Aufspannungen, Thermokompensation, Ereignisprotokoll                -->
+  <!-- Alle Werte werden von renderProduction() in app.js befüllt         -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+  <div class="tab-pane fade" id="tab-production" role="tabpanel">
+
+    <!-- ── Warn-Banner: werden von renderProduction() ein-/ausgeblendet ── -->
+    <div id="prodBannerCoolant"
+         class="alert d-flex align-items-center gap-2 py-2 mb-2 alert-danger border-danger"
+         style="font-size:.78rem; display:none !important;">
+      <i class="bi bi-droplet-half me-1"></i>
+      <span data-i18n="prodCoolantWarn">Kein Kühlmittel aktiv — Spindel läuft ohne Kühlung. Trockenschnitt-Risiko.</span>
+    </div>
+    <div id="prodBannerWarmup"
+         class="alert d-flex align-items-center gap-2 py-2 mb-3 alert-warning border-warning"
+         style="font-size:.78rem; display:none !important;">
+      <i class="bi bi-thermometer-half me-1"></i>
+      <span data-i18n="prodWarmupWarn">Warmup-Kompensation deaktiviert — Erste-Teil-Maßabweichung ±0,05 mm möglich.</span>
+    </div>
+
+    <!-- ── Zeile 1: KPI-Karten ──────────────────────────────────────────── -->
+    <div class="row g-2 mb-3">
+
+      <!-- Spindelnutzung -->
+      <div class="col-6 col-md-3">
+        <div class="card h-100 text-center py-2">
+          <div class="lbl mb-1" data-i18n="prodSpindleUtil">SPINDELNUTZUNG</div>
+          <div id="kpiSpindleUtil" class="val-xl text-accent">—</div>
+          <div id="kpiSpindleUtilSub" class="lbl mt-1">— s / — s</div>
+        </div>
+      </div>
+
+      <!-- Letzter Zyklus -->
+      <div class="col-6 col-md-3">
+        <div class="card h-100 text-center py-2">
+          <div class="lbl mb-1" data-i18n="prodLastCycle">LETZTER ZYKLUS</div>
+          <div id="kpiLastCycle" class="val-xl text-accent2">—</div>
+          <div id="kpiLastCycleSub" class="lbl mt-1" data-i18n="prodCycleRunning">Aktuell: — s</div>
+        </div>
+      </div>
+
+      <!-- Teile gesamt -->
+      <div class="col-6 col-md-3">
+        <div class="card h-100 text-center py-2">
+          <div class="lbl mb-1" data-i18n="prodPartsTotal">TEILE GESAMT (M30)</div>
+          <div id="kpiPartsTotal" class="val-xl text-accent">—</div>
+          <div class="lbl mt-1" data-i18n="prodLifetime">Lebenszeit-Zähler</div>
+        </div>
+      </div>
+
+      <!-- Schichtzähler -->
+      <div class="col-6 col-md-3">
+        <div class="card h-100 text-center py-2">
+          <div class="lbl mb-1" data-i18n="prodPartsShift">SCHICHT (M30C2)</div>
+          <div id="kpiPartsShift" class="val-xl text-warning">—</div>
+          <div id="kpiPartsShiftWarn" class="lbl mt-1 text-danger" style="display:none;"
+               data-i18n="prodShiftWarn">Nie zurückgesetzt!</div>
+        </div>
+      </div>
+
+    </div><!-- /row KPIs -->
+
+    <!-- ── Zeile 2: OEE + Kühlmittelstatus ─────────────────────────────── -->
+    <div class="row g-2 mb-3">
+
+      <!-- OEE-Karte -->
+      <div class="col-12 col-md-7">
+        <div class="card h-100">
+          <div class="card-header">
+            <i class="bi bi-speedometer me-1"></i>
+            <span data-i18n="prodOEE">OEE-KOMPONENTEN</span>
+          </div>
+          <div class="card-body">
+
+            <!-- Spindelnutzung / Performance -->
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <div class="lbl" style="width:110px;" data-i18n="prodPerformance">Leistung</div>
+              <div class="flex-grow-1" style="height:8px; background:#1a2535; border-radius:4px; overflow:hidden;">
+                <div id="oeeBarPerf" style="height:100%; width:0%; background:#fd7e14; border-radius:4px; transition:width .5s;"></div>
+              </div>
+              <div id="oeeValPerf" class="mono" style="width:48px; text-align:right; font-size:.85rem; color:#fd7e14;">—</div>
+            </div>
+
+            <!-- Verfügbarkeit (placeholder — no reject data) -->
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <div class="lbl" style="width:110px;" data-i18n="prodAvailability">Verfügbarkeit</div>
+              <div class="flex-grow-1" style="height:8px; background:#1a2535; border-radius:4px; overflow:hidden;">
+                <div id="oeeBarAvail" style="height:100%; width:75%; background:#0dcaf0; border-radius:4px; transition:width .5s;"></div>
+              </div>
+              <div id="oeeValAvail" class="mono text-accent" style="width:48px; text-align:right; font-size:.85rem;">~75%</div>
+            </div>
+
+            <!-- Qualität -->
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <div class="lbl" style="width:110px;" data-i18n="prodQuality">Qualität</div>
+              <div class="flex-grow-1" style="height:8px; background:#1a2535; border-radius:4px; overflow:hidden;">
+                <div style="height:100%; width:85%; background:#20c997; border-radius:4px;"></div>
+              </div>
+              <div class="mono lbl" style="width:48px; text-align:right; font-size:.85rem;" data-i18n="prodND">n.d.</div>
+            </div>
+
+            <!-- Laufzeitverhältnis -->
+            <div class="row g-2">
+              <div class="col-6">
+                <div class="lbl mb-1" data-i18n="prodSpindleTime">Spindellaufzeit</div>
+                <div id="oeeSpindleTime" class="val-sm text-accent2 mono">—</div>
+              </div>
+              <div class="col-6">
+                <div class="lbl mb-1" data-i18n="prodMachineRuntime">Maschinenlaufzeit</div>
+                <div id="oeeMachineTime" class="val-sm text-warning mono">—</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Kühlmittel-Status -->
+      <div class="col-12 col-md-5">
+        <div class="card h-100">
+          <div class="card-header">
+            <i class="bi bi-droplet me-1"></i>
+            <span data-i18n="prodCoolant">KÜHLMITTELSTATUS</span>
+          </div>
+          <div class="card-body">
+            <div class="row g-1" id="coolantStatusGrid">
+              <!-- Wird von renderProduction() befüllt -->
+              <!-- Format: 4 Zeilen × 2 Spalten mit Badge je Kanal -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row OEE + Kühlmittel -->
+
+    <!-- ── Zeile 3: Werkzeugbibliothek ─────────────────────────────────── -->
+    <div class="row g-2 mb-3">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <i class="bi bi-tools me-1"></i>
+            <span data-i18n="prodToolLib">WERKZEUGBIBLIOTHEK — VERSCHLEISS &amp; GEOMETRIE</span>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-dark table-sm table-hover mb-0"
+                     style="--bs-table-bg:transparent; font-size:.8rem;">
+                <thead>
+                  <tr>
+                    <th class="lbl ps-3" data-i18n="prodToolNo">T#</th>
+                    <th class="lbl" data-i18n="prodToolDiam">⌀ Geo (mm)</th>
+                    <th class="lbl" data-i18n="prodToolLen">L-Offset (mm)</th>
+                    <th class="lbl" data-i18n="prodToolLWear">L-Verschleiß</th>
+                    <th class="lbl" data-i18n="prodToolDWear">⌀-Verschleiß</th>
+                    <th class="lbl" data-i18n="prodToolStatus">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="toolTableBody">
+                  <!-- Wird von renderProduction() befüllt -->
+                </tbody>
+              </table>
+            </div>
+            <div class="lbl px-3 py-2" style="font-size:.7rem; color:#3a4a5c;">
+              <span data-i18n="prodToolThreshold">Schwellenwert: L-Verschleiß ≥ 0,05 mm oder ⌀-Verschleiß ≥ 0,03 mm → Alarm</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Zeile 4: Aufspannungen + Thermokompensation + Ereignisprotokoll ── -->
+    <div class="row g-2">
+
+      <!-- Aufspannungsübersicht -->
+      <div class="col-12 col-md-4">
+        <div class="card h-100">
+          <div class="card-header">
+            <i class="bi bi-bounding-box-circles me-1"></i>
+            <span data-i18n="prodFixtures">AUFSPANNUNGEN</span>
+          </div>
+          <div class="card-body">
+            <div class="row g-1" id="fixtureGrid">
+              <!-- Wird von renderProduction() befüllt -->
+            </div>
+            <div id="fixtureDriftWarn" class="lbl mt-2" style="display:none; font-size:.7rem; color:#fd7e14;">
+              <i class="bi bi-exclamation-triangle me-1"></i>
+              <span data-i18n="prodFixtureDrift">G55/G56 X-Abstand &lt;1 mm — Setup-Fehler prüfen</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thermokompensation -->
+      <div class="col-12 col-md-4">
+        <div class="card h-100">
+          <div class="card-header">
+            <i class="bi bi-thermometer-half me-1"></i>
+            <span data-i18n="prodThermal">THERMOKOMPENSATION</span>
+          </div>
+          <div class="card-body">
+
+            <div class="d-flex justify-content-between mb-2" style="font-size:.82rem;">
+              <span class="lbl" data-i18n="prodWarmupTime">Warmup-Zeit</span>
+              <span id="thermalWarmupTime" class="mono text-danger">0 min</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2" style="font-size:.82rem;">
+              <span class="lbl">X</span>
+              <span id="thermalX" class="mono text-danger">0.0 mm</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2" style="font-size:.82rem;">
+              <span class="lbl">Y</span>
+              <span id="thermalY" class="mono text-danger">0.0 mm</span>
+            </div>
+            <div class="d-flex justify-content-between mb-3" style="font-size:.82rem;">
+              <span class="lbl">Z</span>
+              <span id="thermalZ" class="mono text-danger">0.0 mm</span>
+            </div>
+
+            <div id="thermalWarnBox"
+                 class="alert alert-danger border-danger py-2"
+                 style="font-size:.72rem; display:none;">
+              <span data-i18n="prodThermalWarnDetail">
+                Kompensation deaktiviert.<br>
+                Empfehlung: 15 min · X 300 mm · Y 150 mm · Z 200 mm
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Ereignisprotokoll -->
+      <div class="col-12 col-md-4">
+        <div class="card h-100">
+          <div class="card-header">
+            <i class="bi bi-journal-text me-1"></i>
+            <span data-i18n="prodEventLog">EREIGNISPROTOKOLL</span>
+          </div>
+          <div class="card-body p-0">
+            <div id="eventLogList" style="font-size:.78rem;">
+              <!-- Wird von renderProduction() befüllt -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row Aufspannungen etc. -->
+
+  </div><!-- /tab-production -->
+
 </div><!-- /tab-content -->
 
 
@@ -909,7 +1171,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Übersetzungsdatei: definiert das i18n-Dictionary und setLanguage() -->
-<script src="../js/js_i18n.js"></script>
+<script src="../js/i18n.js"></script>
 
 <!-- Hauptanwendungslogik: Datenabruf, Parsing, Canvas-Zeichnung, UI-Rendering -->
 <script src="../js/app.js"></script>

@@ -71,6 +71,7 @@ const xmlGet = (doc, tag, name) => xmlAll(doc, tag, name)[0]?.value ?? null;
    ========================================================================== */
 
 const state = {
+  // ── Bestehende Felder ──────────────────────────────────────────────────
   spindleRPM: 0, xPos: 0, yPos: 0, zPos: 0,
   cycleTime: 0, spindleTime: 0, machineRunTime: 0,
   toolNum: 1, station: 10, spNum: 4, maxPwr: 7.0,
@@ -80,6 +81,22 @@ const state = {
   posHistory: [],
   sensorSpindle: null, sensorX: null, sensorY: null,
   sensorHist: { s: [], x: [], y: [] },
+
+  // ── IE-Produktions-Felder (Produktion-Tab) ─────────────────────────────
+  lastCycle:   0,        // Letzte abgeschlossene Zykluszeit in Sekunden
+  m30c2:       null,     // M30-Zähler 2 (Schichtzähler, resettierbar)
+  coolant: {             // Sieben Kühlmittelkanäle
+    tsc: false, hpc: false, spigot: false,
+    shower: false, mist: false, mql: false, tab: false,
+  },
+  workOffsets: {},       // G54–G59: { G54: [x,y,z,...], ... }
+  activeWCS:   null,     // Aktives WCS z.B. 'G59'
+  thermal: {             // Warmup-Kompensation
+    time: 0, x: 0, y: 0, z: 0,
+  },
+  toolLib: [],           // Array von {t, diam, len, lWear, dWear} für T1–T10
+  eventLog:  [],         // Array von {ts, msg} aus dem EventLog
+  controllerMode: '',    // AUTO / MANUAL / MDI
 };
 
 /* ==========================================================================
@@ -380,7 +397,13 @@ async function testConnection(silent) {
     if (!silent && fb) {
       fb.className = 'alert alert-success py-2 mb-0';
       fb.textContent = `✔ Verbunden — ${displayLabel}`;
-      setTimeout(() => bsModal.hide(), 800);
+      setTimeout(() => {
+        // Fokus vom Verbinden-Button weg bewegen bevor Bootstrap
+        // aria-hidden="true" auf das Modal setzt — verhindert die
+        // "aria-hidden on focused element"-Warnung in der Konsole.
+        if (document.activeElement) document.activeElement.blur();
+        bsModal.hide();
+      }, 800);
     }
     poll();  // Sofort ersten Datenabruf starten
 
@@ -446,6 +469,85 @@ function parseCurrent(doc) {
   const al = xmlGet(doc, 'Message',  'ActiveAlarms');        if (al) state.activeAlarms   = al;
   const ct = xmlAll(doc, 'AccumulatedTime', 'ThisCycle');
   if (ct.length) state.cycleTime = parseInt(ct[ct.length - 1].value) || 0;
+
+  // ── IE-Produktionsfelder ───────────────────────────────────────────────
+
+  // Letzter Zyklus (abgeschlossener Zyklus, nicht der laufende)
+  const lc = xmlAll(doc, 'AccumulatedTime', 'LastCycle');
+  if (lc.length) state.lastCycle = parseInt(lc[lc.length-1].value) || 0;
+
+  // M30-Zähler 2 (Schichtzähler)
+  const m3c2 = xmlGet(doc, 'Message', 'M30Counter2');
+  if (m3c2 !== null) state.m30c2 = parseInt(m3c2) || 0;
+
+  // Controller-Modus
+  const mode = xmlGet(doc, 'ControllerMode', 'Mode');
+  if (mode) state.controllerMode = mode;
+
+  // Kühlmittelkanäle
+  const boolVal = v => v === 'true';
+  state.coolant.tsc    = boolVal(xmlGet(doc, 'Message', 'TscEnabled'));
+  state.coolant.hpc    = boolVal(xmlGet(doc, 'Message', 'HpcEnabled'));
+  state.coolant.spigot = boolVal(xmlGet(doc, 'Message', 'CoolantSpigotEnabled'));
+  state.coolant.shower = boolVal(xmlGet(doc, 'Message', 'ShowerCoolantEnabled'));
+  state.coolant.mist   = boolVal(xmlGet(doc, 'Message', 'MistEnabled'));
+  state.coolant.mql    = boolVal(xmlGet(doc, 'Message', 'PulseJet'));
+  state.coolant.tab    = boolVal(xmlGet(doc, 'Message', 'TabEnabled'));
+
+  // Aktives WCS aus G-Codes ableiten
+  const gArr = state.gcodes;
+  const wcsCode = ['G54','G55','G56','G57','G58','G59'].find(g => gArr.includes(g));
+  if (wcsCode) state.activeWCS = wcsCode;
+
+  // Werkzeugversatz-Offsets (G54–G59)
+  ['G54','G55','G56','G57','G58','G59'].forEach(g => {
+    const v = xmlGet(doc, 'WorkOffset', g);
+    if (v) state.workOffsets[g] = v.split(',').map(Number);
+  });
+
+  // Warmup-Kompensation
+  const wt = xmlGet(doc, 'Message', 'WarmUpTimeMinutes'); if (wt) state.thermal.time = parseFloat(wt)||0;
+  const wx = xmlGet(doc, 'Message', 'WarmupXDistance');   if (wx) state.thermal.x    = parseFloat(wx)||0;
+  const wy = xmlGet(doc, 'Message', 'WarmupYDistance');   if (wy) state.thermal.y    = parseFloat(wy)||0;
+  const wz = xmlGet(doc, 'Message', 'WarmupZDistance');   if (wz) state.thermal.z    = parseFloat(wz)||0;
+
+  // Werkzeugbibliothek: DiameterGeometry + LengthGeometry + Wear-Arrays
+  const diamGeo  = (xmlGet(doc, 'Message', 'DiameterGeometry') || '').split(',').map(Number);
+  const lenGeo   = (xmlGet(doc, 'Message', 'LengthGeometry')   || '').split(',').map(Number);
+  const lenWear  = (xmlGet(doc, 'Message', 'LengthWear')       || '').split(',').map(Number);
+  const diamWear = (xmlGet(doc, 'Message', 'DiameterWear')     || '').split(',').map(Number);
+  const pockets  = (xmlGet(doc, 'Message', 'Pocket')           || '').split(',').map(Number);
+  if (diamGeo.length > 1) {
+    state.toolLib = [];
+    for (let i = 0; i < 10; i++) {
+      if (pockets[i] && pockets[i] > 0) {
+        state.toolLib.push({
+          t:     i + 1,
+          diam:  diamGeo[i]  || 0,
+          len:   lenGeo[i]   || 0,
+          lWear: lenWear[i]  || 0,
+          dWear: diamWear[i] || 0,
+        });
+      }
+    }
+  }
+
+  // Ereignisprotokoll aus strukturiertem XML parsen
+  const elogEls = doc.getElementsByTagNameNS('*', 'EventLogEntry');
+  if (elogEls.length) {
+    state.eventLog = [];
+    for (const e of elogEls) {
+      state.eventLog.push({
+        ts:  e.getAttribute('timestamp') || '',
+        msg: e.textContent.trim(),
+      });
+    }
+  }
+  // Maschinenkonditionen und Alarmstatus als synthetische Events hinzufügen
+  if (al && !state.eventLog.find(e => e.msg === al)) {
+    const alTs = xmlAll(doc, 'Message', 'ActiveAlarms')[0]?.ts || '';
+    state.eventLog.unshift({ ts: alTs, msg: al });
+  }
 }
 
 /* ==========================================================================
@@ -489,16 +591,11 @@ async function poll() {
   if (!PROXY_URL && !BACKEND_URL) return;
 
   try {
-    // ── Priorität 1: Python-Backend → /api/latest (JSON) ─────────────────
     if (BACKEND_URL) {
       const ok = await fetchFromBackend();
-      if (ok) { renderUI(); return; }
-      // Backend nicht erreichbar → fallback auf Proxy-XML (Priorität 2)
+      if (ok) { renderUI(); renderProduction(); return; }
     }
 
-    // ── Priorität 2: XML über Proxy ───────────────────────────────────────
-    // fetchMTC() gibt null zurück wenn PROXY_URL und BACKEND_URL beide null.
-    // Der Guard oben stellt sicher dass das hier nie passiert.
     const [docCurrent, docSample] = await Promise.all([
       fetchMTC('current'),
       fetchMTC('sample'),
@@ -509,6 +606,7 @@ async function poll() {
       parseSamples(docSample);
       await fetchSensor();
       renderUI();
+      renderProduction();
     }
   } catch (e) {
     console.error('Poll-Fehler:', e);
@@ -606,8 +704,187 @@ function updateSensorUI() {
 }
 
 /* ==========================================================================
-   CANVAS — Tachometer
+   UI-RENDERING — Produktion-Tab
    ========================================================================== */
+
+function renderProduction() {
+  // Abkürzung: Element holen, sicher (gibt null wenn nicht vorhanden)
+  const g = id => document.getElementById(id);
+  if (!g('kpiSpindleUtil')) return; // Tab noch nicht im DOM
+
+  // ── Warn-Banner ──────────────────────────────────────────────────────────
+  const allCoolantOff = !Object.values(state.coolant).some(Boolean);
+  const spinningDry   = allCoolantOff && state.spindleRPM > 100;
+  const warmupOff     = state.thermal.time === 0 &&
+                        state.thermal.x === 0 &&
+                        state.thermal.y === 0 &&
+                        state.thermal.z === 0;
+
+  const showBanner = (id, visible) => {
+    const b = g(id);
+    if (b) b.style.display = visible ? '' : 'none !important';
+    if (b) b.style.cssText = visible
+      ? '' : 'display:none !important;';
+  };
+  showBanner('prodBannerCoolant', spinningDry);
+  showBanner('prodBannerWarmup',  warmupOff);
+
+  // ── KPI-Karten ───────────────────────────────────────────────────────────
+  const util = state.machineRunTime > 0
+    ? (state.spindleTime / state.machineRunTime * 100).toFixed(1) + '%'
+    : '—';
+  if (g('kpiSpindleUtil'))    g('kpiSpindleUtil').textContent    = util;
+  if (g('kpiSpindleUtilSub')) g('kpiSpindleUtilSub').textContent =
+    `${fmtHMS(state.spindleTime)} / ${fmtHMS(state.machineRunTime)}`;
+
+  if (g('kpiLastCycle'))    g('kpiLastCycle').textContent    = state.lastCycle ? state.lastCycle + ' s' : '—';
+  if (g('kpiLastCycleSub')) g('kpiLastCycleSub').textContent =
+    (typeof t === 'function' ? t('prodCycleRunning') : 'Aktuell:') + ' ' + state.cycleTime + ' s';
+
+  if (g('kpiPartsTotal')) g('kpiPartsTotal').textContent = state.m30c || '—';
+
+  const shiftEl   = g('kpiPartsShift');
+  const shiftWarn = g('kpiPartsShiftWarn');
+  if (shiftEl) shiftEl.textContent = state.m30c2 !== null ? state.m30c2 : '—';
+  const shiftNeverReset = state.m30c2 !== null && state.m30c !== null &&
+                          String(state.m30c2) === String(state.m30c);
+  if (shiftWarn) shiftWarn.style.display = shiftNeverReset ? '' : 'none';
+
+  // ── OEE-Balken ────────────────────────────────────────────────────────────
+  const perfPct = state.machineRunTime > 0
+    ? Math.min(100, state.spindleTime / state.machineRunTime * 100)
+    : 0;
+  const perfBar = g('oeeBarPerf');
+  const perfVal = g('oeeValPerf');
+  if (perfBar) perfBar.style.width = perfPct.toFixed(1) + '%';
+  if (perfVal) perfVal.textContent = perfPct.toFixed(1) + '%';
+  if (g('oeeSpindleTime')) g('oeeSpindleTime').textContent = fmtHMS(state.spindleTime);
+  if (g('oeeMachineTime')) g('oeeMachineTime').textContent = fmtHMS(state.machineRunTime);
+
+  // ── Kühlmittel-Grid ───────────────────────────────────────────────────────
+  const coolantGrid = g('coolantStatusGrid');
+  if (coolantGrid) {
+    const channels = [
+      { key: 'shower', label: 'Duschkühlung' },
+      { key: 'hpc',    label: 'Hochdruck (HPC)' },
+      { key: 'tsc',    label: 'Spindel (TSC)' },
+      { key: 'mist',   label: 'Nebel' },
+      { key: 'spigot', label: 'Spigot' },
+      { key: 'tab',    label: 'Luftblast' },
+      { key: 'mql',    label: 'MQL / Öl' },
+    ];
+    coolantGrid.innerHTML = channels.map(ch => {
+      const on = state.coolant[ch.key];
+      const badge = on
+        ? `<span class="badge bg-success bg-opacity-25 text-success border border-success" style="font-size:.65rem;">EIN</span>`
+        : `<span class="badge bg-danger  bg-opacity-25 text-danger  border border-danger"  style="font-size:.65rem;">AUS</span>`;
+      return `<div class="col-6 d-flex justify-content-between align-items-center py-1" style="font-size:.78rem;">
+        <span class="lbl">${ch.label}</span>${badge}</div>`;
+    }).join('');
+  }
+
+  // ── Werkzeugbibliothek ────────────────────────────────────────────────────
+  const tbody = g('toolTableBody');
+  if (tbody && state.toolLib.length) {
+    const activeT = parseInt(state.toolNum) || 0;
+    tbody.innerHTML = state.toolLib.map(tool => {
+      const isActive = tool.t === activeT;
+      const lWearPct = Math.min(100, (tool.lWear / 0.05) * 100);
+      const dWearPct = Math.min(100, (tool.dWear / 0.03) * 100);
+      const lWarnCls = lWearPct >= 80 ? 'bg-danger'  : lWearPct >= 50 ? 'bg-warning' : 'bg-success';
+      const dWarnCls = dWearPct >= 80 ? 'bg-danger'  : dWearPct >= 50 ? 'bg-warning' : 'bg-success';
+      const statusBadge = isActive
+        ? `<span class="badge bg-info bg-opacity-25 text-info border border-info" style="font-size:.65rem;">AKTIV</span>`
+        : `<span class="badge bg-secondary bg-opacity-25 text-secondary border border-secondary" style="font-size:.65rem;">BEREIT</span>`;
+      return `<tr${isActive ? ' class="table-info table-active"' : ''}>
+        <td class="ps-3 mono${isActive ? ' text-info' : ''}">${isActive ? '▶ ' : ''}T${tool.t}</td>
+        <td class="mono">${tool.diam.toFixed(2)}</td>
+        <td class="mono">${tool.len.toFixed(3)}</td>
+        <td>
+          <div style="height:5px;background:#1a2535;border-radius:3px;overflow:hidden;width:80px;">
+            <div style="height:100%;width:${lWearPct.toFixed(0)}%;border-radius:3px;" class="${lWarnCls}"></div>
+          </div>
+          <span class="lbl">${tool.lWear.toFixed(3)}</span>
+        </td>
+        <td>
+          <div style="height:5px;background:#1a2535;border-radius:3px;overflow:hidden;width:80px;">
+            <div style="height:100%;width:${dWearPct.toFixed(0)}%;border-radius:3px;" class="${dWarnCls}"></div>
+          </div>
+          <span class="lbl">${tool.dWear.toFixed(3)}</span>
+        </td>
+        <td>${statusBadge}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Aufspannungs-Grid ─────────────────────────────────────────────────────
+  const fixGrid = g('fixtureGrid');
+  if (fixGrid) {
+    const wcsCodes = ['G54','G55','G56','G57','G58','G59'];
+    fixGrid.innerHTML = wcsCodes.map(wcs => {
+      const offsets = state.workOffsets[wcs];
+      const isActive = wcs === state.activeWCS;
+      const hasData = offsets && (offsets[0] !== 0 || offsets[1] !== 0);
+      if (!hasData && !isActive) {
+        return `<div class="col-4">
+          <div class="p-2 rounded lbl text-center" style="border:0.5px solid #131c28; font-size:.7rem;">
+            <div class="mono lbl">${wcs}</div>
+            <div style="color:#1e2d40; font-size:.65rem;">—</div>
+          </div></div>`;
+      }
+      const xStr = offsets ? offsets[0].toFixed(1) : '—';
+      const yStr = offsets ? offsets[1].toFixed(1) : '—';
+      const borderCls = isActive ? 'border-info' : 'border-secondary';
+      const textCls   = isActive ? 'text-info' : 'lbl';
+      return `<div class="col-4">
+        <div class="p-2 rounded" style="border:0.5px solid; font-size:.7rem;"
+             class="${borderCls}">
+          <div class="mono fw-bold ${textCls}">${isActive ? '▶ ' : ''}${wcs}</div>
+          <div class="mono lbl" style="font-size:.65rem;">${xStr}, ${yStr}</div>
+        </div></div>`;
+    }).join('');
+
+    // G55/G56 X-Abstand Warnung
+    const g55 = state.workOffsets['G55'];
+    const g56 = state.workOffsets['G56'];
+    const driftWarn = g('fixtureDriftWarn');
+    if (driftWarn && g55 && g56) {
+      const xDiff = Math.abs(g55[0] - g56[0]);
+      driftWarn.style.display = xDiff < 1 && xDiff > 0 ? '' : 'none';
+    }
+  }
+
+  // ── Thermokompensation ────────────────────────────────────────────────────
+  const thColor = v => v === 0 ? 'text-danger' : 'text-success';
+  if (g('thermalWarmupTime')) {
+    g('thermalWarmupTime').textContent = state.thermal.time + ' min';
+    g('thermalWarmupTime').className   = 'mono ' + thColor(state.thermal.time);
+  }
+  if (g('thermalX')) { g('thermalX').textContent = state.thermal.x.toFixed(1) + ' mm'; g('thermalX').className = 'mono ' + thColor(state.thermal.x); }
+  if (g('thermalY')) { g('thermalY').textContent = state.thermal.y.toFixed(1) + ' mm'; g('thermalY').className = 'mono ' + thColor(state.thermal.y); }
+  if (g('thermalZ')) { g('thermalZ').textContent = state.thermal.z.toFixed(1) + ' mm'; g('thermalZ').className = 'mono ' + thColor(state.thermal.z); }
+
+  const thermalActive = state.thermal.time > 0 || state.thermal.x > 0 || state.thermal.y > 0 || state.thermal.z > 0;
+  if (g('thermalWarnBox')) g('thermalWarnBox').style.display = thermalActive ? 'none' : '';
+
+  // ── Ereignisprotokoll ─────────────────────────────────────────────────────
+  const evList = g('eventLogList');
+  if (evList && state.eventLog.length) {
+    evList.innerHTML = state.eventLog.slice(0, 8).map(ev => {
+      const ts  = ev.ts ? ev.ts.slice(11, 19) : '—';
+      const isOk = ev.msg.toLowerCase().includes('no active') ||
+                   ev.msg.toLowerCase().includes('started')   ||
+                   ev.msg.toLowerCase().includes('normal');
+      const col = isOk ? 'text-success' : ev.msg.toLowerCase().includes('alarm') ? 'text-danger' : 'text-warning';
+      return `<div class="d-flex gap-2 px-3 py-2" style="border-top:0.5px solid #131c28; font-size:.76rem;">
+        <span class="mono lbl" style="white-space:nowrap;">${ts}</span>
+        <span class="${col}">${ev.msg}</span>
+      </div>`;
+    }).join('');
+  } else if (evList) {
+    evList.innerHTML = `<div class="px-3 py-2 lbl" style="font-size:.76rem;" data-i18n="awaiting">Warte auf Daten…</div>`;
+  }
+}
 
 function drawTacho(id, value, maxVal, color) {
   const c = el(id);
