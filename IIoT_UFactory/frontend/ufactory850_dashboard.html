@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UFactory 850 — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/ufactory.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     TOPBAR
+════════════════════════════════════════════════ -->
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="brand">UFactory<span> 850</span></div>
+    <div class="conn-badge">
+      <div class="conn-dot" id="connDot" style="background:var(--text3);box-shadow:none"></div>
+      <input id="connIpInput" value="192.168.1.185"
+        style="background:transparent;border:none;outline:none;font-family:var(--font-mono);font-size:11px;color:var(--text2);width:110px;cursor:text"
+        title="IP-Adresse des Roboters">
+      <span style="color:var(--border2)">|</span>
+      <span style="color:var(--cyan)">:18333</span>
+    </div>
+    <div class="conn-badge" id="connStatusBadge">
+      <span style="color:var(--text3)" id="connStatusLabel">GETRENNT</span>
+    </div>
+    <button class="btn cyan" id="btnConnect" style="font-size:10px;padding:4px 10px">▶ Verbinden</button>
+  </div>
+  <div class="topbar-right">
+    <span class="state-pill state-run" id="motionState">IN MOTION</span>
+    <span class="clock" id="clockEl">--:--:--</span>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN LAYOUT
+════════════════════════════════════════════════ -->
+<div class="dash">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar">
+
+    <!-- Steuerung -->
+    <div>
+      <div class="section-label">Steuerung</div>
+
+      <div class="card">
+        <div class="card-title">Bewegungsmodus <span class="reg-tag">Reg 19</span></div>
+        <select class="ctrl-select" id="modeSelect">
+          <option value="0">0 — Positionssteuerung</option>
+          <option value="1">1 — Servo-Modus</option>
+          <option value="2">2 — Manueller Modus</option>
+          <option value="4">4 — Gelenkgeschwindigkeit</option>
+          <option value="5">5 — Kart. Geschwindigkeit</option>
+          <option value="6">6 — Gelenk-Online-Traj.</option>
+          <option value="7">7 — Kart.-Online-Traj.</option>
+        </select>
+
+        <div class="ctrl-label">TCP-Geschwindigkeit</div>
+        <div class="ctrl-range-row">
+          <input type="range" class="ctrl-range" min="0" max="1000" value="250" id="tcpSpeedSlider">
+          <span class="ctrl-range-val" id="tcpSpeedSliderVal">250 mm/s</span>
+        </div>
+
+        <div class="ctrl-label">Gelenkgeschwindigkeit</div>
+        <div class="ctrl-range-row">
+          <input type="range" class="ctrl-range" min="0" max="360" value="90" id="jointSpeedSlider">
+          <span class="ctrl-range-val" id="jointSpeedSliderVal">90 °/s</span>
+        </div>
+
+        <div class="ctrl-label">Beschleunigung</div>
+        <div class="ctrl-range-row">
+          <input type="range" class="ctrl-range" min="0" max="5000" value="1200" id="accSlider">
+          <span class="ctrl-range-val" id="accSliderVal">1200 mm/s²</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notfall -->
+    <div>
+      <div class="section-label">Notfall</div>
+      <div class="card">
+        <div class="btn-row" style="flex-direction:column;gap:6px">
+          <button class="btn red" style="width:100%;font-size:12px" id="btnEstop">⬛  NOTSTOPP (Reg 12→4)</button>
+          <button class="btn amber" style="width:100%" id="btnSuspend">⏸  Anhalten (Reg 12→3)</button>
+          <button class="btn green" style="width:100%" id="btnResume">▶  Fortsetzen (Reg 12→0)</button>
+        </div>
+        <div class="btn-row" style="margin-top:6px">
+          <button class="btn amber" id="btnClearErr">↺ Fehler löschen</button>
+          <button class="btn cyan"  id="btnClearWarn">↺ Warn. löschen</button>
+        </div>
+        <div class="err-box" id="errBox">
+          <span class="err-icon">⚠</span>
+          <span id="errMsg">Fehlercode 0x00 — Kein Fehler</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Servo enable -->
+    <div>
+      <div class="section-label">Servos (Reg 11)</div>
+      <div class="card">
+        <div class="servo-grid" id="servoCtrl">
+          <div class="servo-chip ok"><div class="servo-name">J1</div><div class="servo-temp">ENA</div></div>
+          <div class="servo-chip ok"><div class="servo-name">J2</div><div class="servo-temp">ENA</div></div>
+          <div class="servo-chip ok"><div class="servo-name">J3</div><div class="servo-temp">ENA</div></div>
+          <div class="servo-chip ok"><div class="servo-name">J4</div><div class="servo-temp">ENA</div></div>
+          <div class="servo-chip ok"><div class="servo-name">J5</div><div class="servo-temp">ENA</div></div>
+          <div class="servo-chip ok"><div class="servo-name">J6</div><div class="servo-temp">ENA</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modbus TCP Raw -->
+    <div>
+      <div class="section-label">Protokoll-Log</div>
+      <div class="card" style="padding:10px">
+        <div class="log-area" id="logArea"></div>
+        <div style="margin-top:8px;display:flex;gap:6px">
+          <button class="btn cyan" style="flex:1;font-size:10px" id="btnLog">● Aufzeichnen</button>
+          <button class="btn"      style="font-size:10px" id="btnClearLog">Löschen</button>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ─── MAIN ─── -->
+  <main class="main">
+
+    <!-- KPI ROW -->
+    <div class="kpi-row">
+      <div class="kpi green">
+        <div class="kpi-label">TCP-Geschw.</div>
+        <div><span class="kpi-value" id="kpiSpeed">243</span><span class="kpi-unit">mm/s</span></div>
+        <div class="kpi-sub">Max 1000 mm/s</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="kpiSpeedBar" style="width:24%;background:var(--green)"></div></div>
+      </div>
+      <div class="kpi cyan">
+        <div class="kpi-label">TCP Z-Position</div>
+        <div><span class="kpi-value" id="kpiZ">248</span><span class="kpi-unit">mm</span></div>
+        <div class="kpi-sub">Reg 41 (0x29)</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="kpiZBar" style="width:49%;background:var(--cyan)"></div></div>
+      </div>
+      <div class="kpi amber">
+        <div class="kpi-label">Pufferbefehle</div>
+        <div><span class="kpi-value" id="kpiBuf">3</span><span class="kpi-unit">cmd</span></div>
+        <div class="kpi-sub">Reg 14 (0x0E)</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="kpiBufBar" style="width:15%;background:var(--amber)"></div></div>
+      </div>
+      <div class="kpi blue">
+        <div class="kpi-label">Gelenkgeschw. J3</div>
+        <div><span class="kpi-value" id="kpiJspeed">1.24</span><span class="kpi-unit">rad/s</span></div>
+        <div class="kpi-sub">Max 3.5 rad/s</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="kpiJspeedBar" style="width:35%;background:var(--blue)"></div></div>
+      </div>
+      <div class="kpi purple">
+        <div class="kpi-label">Laufzeit</div>
+        <div><span class="kpi-value" id="kpiUptime">00:14</span></div>
+        <div class="kpi-sub">hh:mm</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="width:0%;background:var(--purple)"></div></div>
+      </div>
+      <div class="kpi red" id="kpiErrTile">
+        <div class="kpi-label">Fehler / Warnung</div>
+        <div><span class="kpi-value" id="kpiErr">0</span><span class="kpi-unit" id="kpiWarn">/ 0</span></div>
+        <div class="kpi-sub">Reg 15 (0x0F)</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="width:0%;background:var(--red)"></div></div>
+      </div>
+    </div>
+
+    <!-- Modbus strip -->
+    <div class="modbus-strip">
+      <div class="mbus-item"><span>Protokoll:</span><span>Private Modbus TCP :18333</span></div>
+      <div class="mbus-item"><span>Transaction ID:</span><span id="mbusTid">0x0042</span></div>
+      <div class="mbus-item"><span>RTT:</span><span class="ok" id="mbusRtt">2.3 ms</span></div>
+      <div class="mbus-item"><span>Poll-Rate:</span><span id="mbusPoll">100 ms</span></div>
+      <div class="mbus-item"><span>Letztes Reg.:</span><span id="mbusLastReg">0x2A (42)</span></div>
+      <div class="mbus-item"><span>Byte-Order:</span><span>Big-Endian / FP32</span></div>
+      <div class="mbus-item"><span style="color:var(--text2)">Reduced Mode:</span><span id="mbuReduced" class="warn">OFF</span></div>
+    </div>
+
+    <!-- MID ROW: Gelenke | Kart. Position | Kraft-Sensor -->
+    <div class="mid-row">
+
+      <!-- Gelenkwinkel -->
+      <div class="card">
+        <div class="card-title">Gelenkwinkel J1–J6 <span class="reg-tag">Reg 42</span></div>
+        <div id="jointDisplay">
+          <div class="joint-row"><span class="joint-label">J1</span><div class="joint-bar-bg"><div class="joint-bar" id="jb1" style="width:62%"></div></div><span class="joint-val" id="jv1">+1.152 rad</span></div>
+          <div class="joint-row"><span class="joint-label">J2</span><div class="joint-bar-bg"><div class="joint-bar" id="jb2" style="width:38%"></div></div><span class="joint-val" id="jv2">+0.721 rad</span></div>
+          <div class="joint-row"><span class="joint-label">J3</span><div class="joint-bar-bg"><div class="joint-bar warn" id="jb3" style="width:81%"></div></div><span class="joint-val" id="jv3">+1.540 rad</span></div>
+          <div class="joint-row"><span class="joint-label">J4</span><div class="joint-bar-bg"><div class="joint-bar" id="jb4" style="width:44%"></div></div><span class="joint-val" id="jv4">-0.832 rad</span></div>
+          <div class="joint-row"><span class="joint-label">J5</span><div class="joint-bar-bg"><div class="joint-bar" id="jb5" style="width:20%"></div></div><span class="joint-val" id="jv5">+0.380 rad</span></div>
+          <div class="joint-row"><span class="joint-label">J6</span><div class="joint-bar-bg"><div class="joint-bar" id="jb6" style="width:55%"></div></div><span class="joint-val" id="jv6">+1.044 rad</span></div>
+        </div>
+        <div style="margin-top:10px">
+          <div class="card-title" style="margin-bottom:6px">Servo-Temperaturen <span class="reg-tag">Reg 101–115</span></div>
+          <div class="servo-grid" id="servoTemps">
+            <div class="servo-chip ok"><div class="servo-name">J1</div><div class="servo-temp" id="st1">38°C</div></div>
+            <div class="servo-chip ok"><div class="servo-name">J2</div><div class="servo-temp" id="st2">41°C</div></div>
+            <div class="servo-chip warn"><div class="servo-name">J3</div><div class="servo-temp" id="st3">61°C</div></div>
+            <div class="servo-chip ok"><div class="servo-name">J4</div><div class="servo-temp" id="st4">36°C</div></div>
+            <div class="servo-chip ok"><div class="servo-name">J5</div><div class="servo-temp" id="st5">33°C</div></div>
+            <div class="servo-chip ok"><div class="servo-name">J6</div><div class="servo-temp" id="st6">39°C</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kartesische Position + Geschwindigkeitsanzeige -->
+      <div class="card">
+        <div class="card-title">Kartesische TCP-Position <span class="reg-tag">Reg 41</span></div>
+        <div class="pos-grid" style="margin-bottom:10px">
+          <div class="pos-item"><div class="pos-axis">X (mm)</div><div class="pos-val x" id="posX">207.3</div></div>
+          <div class="pos-item"><div class="pos-axis">Y (mm)</div><div class="pos-val y" id="posY">-84.1</div></div>
+          <div class="pos-item"><div class="pos-axis">Z (mm)</div><div class="pos-val z" id="posZ">248.0</div></div>
+          <div class="pos-item"><div class="pos-axis">Roll (rad)</div><div class="pos-val" id="posRoll">+3.141</div></div>
+          <div class="pos-item"><div class="pos-axis">Pitch (rad)</div><div class="pos-val" id="posPitch">0.000</div></div>
+          <div class="pos-item"><div class="pos-axis">Yaw (rad)</div><div class="pos-val" id="posYaw">-0.211</div></div>
+        </div>
+
+        <!-- SVG Geschwindigkeits-Gauge -->
+        <div class="card-title">TCP-Geschwindigkeit <span class="reg-tag">Echt­zeit</span></div>
+        <div class="gauge-wrap">
+          <svg id="gaugesvg" width="180" height="100" viewBox="0 0 180 100">
+            <defs>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="2" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <!-- track -->
+            <path d="M20,90 A70,70 0 0,1 160,90" fill="none" stroke="#1e232c" stroke-width="8" stroke-linecap="round"/>
+            <!-- fill -->
+            <path id="gaugeFill" d="M20,90 A70,70 0 0,1 160,90" fill="none" stroke="var(--cyan)" stroke-width="8" stroke-linecap="round"
+                  stroke-dasharray="220" stroke-dashoffset="165" style="transition:stroke-dashoffset .4s ease" filter="url(#glow)"/>
+            <!-- needle group -->
+            <g id="gaugeNeedle" transform="rotate(0 90 90)">
+              <line x1="90" y1="90" x2="90" y2="30" stroke="var(--text)" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="90" cy="90" r="4" fill="var(--bg3)" stroke="var(--border2)" stroke-width="1"/>
+            </g>
+            <text x="90" y="82" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="16" fill="var(--text)" id="gaugeVal">243</text>
+            <text x="90" y="96" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="var(--text3)">mm/s  (max 1000)</text>
+            <text x="18" y="100" font-family="'JetBrains Mono',monospace" font-size="8" fill="var(--text3)">0</text>
+            <text x="152" y="100" font-family="'JetBrains Mono',monospace" font-size="8" fill="var(--text3)">1000</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- 6-Achs-Kraft/Moment -->
+      <div class="card">
+        <div class="card-title">6-Achs-Kraft/Moment <span class="reg-tag">Reg 200–212</span></div>
+        <div id="ftDisplay">
+          <div class="ft-row"><span class="ft-label">Fx</span><div class="ft-bar-bg"><div class="ft-center-line"></div><div class="ft-fill pos" id="fxf" style="width:18%"></div></div><span class="ft-val" id="fxv">+2.4 N</span></div>
+          <div class="ft-row"><span class="ft-label">Fy</span><div class="ft-bar-bg"><div class="ft-center-line"></div><div class="ft-fill neg" id="fyf" style="width:30%"></div></div><span class="ft-val" id="fyv">-4.1 N</span></div>
+          <div class="ft-row"><span class="ft-label">Fz</span><div class="ft-bar-bg"><div class="ft-center-line"></div><div class="ft-fill pos" id="fzf" style="width:50%"></div></div><span class="ft-val" id="fzv">+6.7 N</span></div>
+          <div class="ft-row"><span class="ft-label">Tx</span><div class="ft-bar-bg"><div class="ft-center-line"></div><div class="ft-fill neg" id="txf" style="width:12%"></div></div><span class="ft-val" id="txv">-0.8 Nm</span></div>
+          <div class="ft-row"><span class="ft-label">Ty</span><div class="ft-bar-bg"><div class="ft-center-line"></div><div class="ft-fill pos" id="tyf" style="width:8%"></div></div><span class="ft-val" id="tyv">+0.5 Nm</span></div>
+          <div class="ft-row"><span class="ft-label">Tz</span><div class="ft-bar-bg"><div class="ft-center-line"></div><div class="ft-fill neg" id="tzf" style="width:22%"></div></div><span class="ft-val" id="tzv">-1.4 Nm</span></div>
+        </div>
+
+        <!-- IO Section -->
+        <div style="margin-top:10px">
+          <div class="card-title" style="margin-bottom:4px">I/O Control Box <span class="reg-tag">Reg 131–140</span></div>
+          <div class="io-section-label">Digitale Eingänge (DI)</div>
+          <div class="io-grid" id="diGrid">
+            <div class="io-ch on" data-ch="DI0"><div class="io-name">DI0</div><div class="io-val">1</div></div>
+            <div class="io-ch on" data-ch="DI1"><div class="io-name">DI1</div><div class="io-val">1</div></div>
+            <div class="io-ch"   data-ch="DI2"><div class="io-name">DI2</div><div class="io-val">0</div></div>
+            <div class="io-ch"   data-ch="DI3"><div class="io-name">DI3</div><div class="io-val">0</div></div>
+          </div>
+          <div class="io-section-label">Digitale Ausgänge (DO)</div>
+          <div class="io-grid" id="doGrid">
+            <div class="io-ch on"  data-ch="DO0" data-out="true"><div class="io-name">DO0</div><div class="io-val">1</div></div>
+            <div class="io-ch"     data-ch="DO1" data-out="true"><div class="io-name">DO1</div><div class="io-val">0</div></div>
+            <div class="io-ch"     data-ch="DO2" data-out="true"><div class="io-name">DO2</div><div class="io-val">0</div></div>
+            <div class="io-ch on"  data-ch="DO3" data-out="true"><div class="io-name">DO3</div><div class="io-val">1</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /mid-row -->
+
+    <!-- BOTTOM ROW: Trajektorie | Servo-Detail -->
+    <div class="bot-row">
+
+      <!-- TCP Trajektorie -->
+      <div class="traj-card">
+        <div class="card-title">
+          TCP-Trajektorie (XY-Ebene) — Echtzeit
+          <div style="display:flex;gap:6px">
+            <span style="font-family:var(--font-mono);font-size:10px;color:var(--red)">─ X</span>
+            <span style="font-family:var(--font-mono);font-size:10px;color:var(--green)">─ Y</span>
+            <span style="font-family:var(--font-mono);font-size:10px;color:var(--blue)">─ Z</span>
+          </div>
+        </div>
+        <canvas id="trajCanvas"></canvas>
+      </div>
+
+      <!-- Servo-Strom -->
+      <div class="card">
+        <div class="card-title">Servo-Strom J1–J6 <span class="reg-tag">Reg 101–115</span></div>
+        <canvas id="currentCanvas" style="width:100%;height:130px;display:block;background:var(--bg4);border-radius:var(--radius);margin-top:6px"></canvas>
+        <div style="margin-top:8px;display:flex;gap:12px;flex-wrap:wrap">
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">J1 <span id="cur1" style="color:var(--text)">0.82A</span></span>
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">J2 <span id="cur2" style="color:var(--text)">0.55A</span></span>
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">J3 <span id="cur3" style="color:var(--amber)">1.43A</span></span>
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">J4 <span id="cur4" style="color:var(--text)">0.38A</span></span>
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">J5 <span id="cur5" style="color:var(--text)">0.21A</span></span>
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">J6 <span id="cur6" style="color:var(--text)">0.44A</span></span>
+        </div>
+      </div>
+
+    </div><!-- /bot-row -->
+
+  </main><!-- /main -->
+</div><!-- /dash -->
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════ -->
+<script src="../js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+# UFactory 850 Dashboard — Python-Abhängigkeiten
+# Installation: pip install -r requirements.txt
+
+flask>=3.0.0
+flask-cors>=4.0.0
