@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cutting Speed Optimization Calculator</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  body { background-color: var(--bs-tertiary-bg); }
+  .font-mono { font-family: 'Courier New', monospace; }
+  .section-divider {
+    font-size: 10px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--bs-secondary-color);
+    font-family: 'Courier New', monospace;
+    border-bottom: 1px solid var(--bs-border-color);
+    padding-bottom: 4px; margin: 1rem 0 .6rem;
+  }
+  .section-divider:first-child { margin-top: 0; }
+  .slider-val {
+    min-width: 88px; text-align: right;
+    font-family: 'Courier New', monospace;
+    font-size: 13px; font-weight: 600;
+    color: var(--bs-emphasis-color);
+  }
+  .form-range { accent-color: #1D9E75; }
+  .metric-card {
+    background: var(--bs-secondary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+    padding: .65rem .85rem;
+  }
+  .metric-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--bs-secondary-color);
+    font-family: 'Courier New', monospace; margin-bottom: 2px;
+  }
+  .metric-val {
+    font-size: 17px; font-weight: 500;
+    font-family: 'Courier New', monospace;
+  }
+  .metric-val.c-teal  { color: #1D9E75; }
+  .metric-val.c-amber { color: #BA7517; }
+  .metric-val.c-coral { color: #D85A30; }
+  .legend-swatch {
+    display: inline-block; width: 22px; height: 3px;
+    border-radius: 2px; vertical-align: middle; margin-right: 4px;
+  }
+  .legend-swatch.vline { width: 3px; height: 14px; border-radius: 1px; }
+  .chart-container    { position: relative; width: 100%; height: 340px; }
+  .chart-container-lg { position: relative; width: 100%; height: 400px; }
+  .formula-box {
+    background: var(--bs-secondary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+    padding: .65rem .85rem;
+    font-size: 12px; line-height: 2;
+    font-family: 'Courier New', monospace;
+    color: var(--bs-secondary-color);
+  }
+  .formula-box strong { color: var(--bs-emphasis-color); font-weight: 600; }
+  .nav-tabs .nav-link { font-family: 'Courier New', monospace; font-size: 14px; }
+  .slider-panel {
+    background: var(--bs-secondary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius-lg);
+  }
+</style>
+</head>
+<body>
+<div class="container-xl py-4">
+
+  <!-- Page header -->
+  <div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+      <h1 class="fs-4 fw-normal mb-1">Cutting Speed Optimization Calculator</h1>
+      <p class="font-mono text-secondary mb-0" style="font-size:13px">
+        Groover &mdash; Fundamentals of Modern Manufacturing, Ch.&nbsp;24.3
+        &middot; Taylor Tool Life Model &middot; Dr.-Ing. Thomas M. Rudolf
+      </p>
+    </div>
+    <button id="themeToggle" onclick="toggleTheme()"
+      class="btn btn-outline-secondary btn-sm font-mono d-flex align-items-center gap-2"
+      style="white-space:nowrap; margin-top:2px">
+      <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278"/>
+      </svg>
+      <span id="themeLabel">Light mode</span>
+    </button>
+  </div>
+
+  <div class="card border shadow-none">
+    <div class="card-body p-3 p-md-4">
+
+      <!-- Nav tabs -->
+      <ul class="nav nav-tabs mb-4" id="mainTabs">
+        <li class="nav-item">
+          <button class="nav-link active" onclick="setTab(0);return false;">Max production rate</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" onclick="setTab(1);return false;">Min cost per unit</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" onclick="setTab(2);return false;">Combined overlay</button>
+        </li>
+      </ul>
+
+      <!-- ══════════════════ TAB 0 ══════════════════ -->
+      <div id="tab0">
+        <div class="row g-3">
+
+          <div class="col-12 col-lg-4">
+            <div class="slider-panel p-3">
+
+              <div class="section-divider">Workpiece geometry</div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-1" style="font-size:13px">Diameter D</label>
+                  <span class="slider-val" id="vD">50 mm</span>
+                </div>
+                <input type="range" class="form-range" min="10" max="200" step="1" value="50"
+                  oninput="set('D',this.value,'vD','mm')">
+              </div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-1" style="font-size:13px">Length L</label>
+                  <span class="slider-val" id="vL">200 mm</span>
+                </div>
+                <input type="range" class="form-range" min="10" max="800" step="1" value="200"
+                  oninput="set('L',this.value,'vL','mm')">
+              </div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-1" style="font-size:13px">Feed f</label>
+                  <span class="slider-val" id="vf">0.25 mm/rev</span>
+                </div>
+                <input type="range" class="form-range" min="0.05" max="1.0" step="0.05" value="0.25"
+                  oninput="set('f',this.value,'vf','mm/rev')">
+              </div>
+
+              <div class="section-divider">Taylor tool life</div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-1" style="font-size:13px">Exponent n</label>
+                  <span class="slider-val" id="vn">0.25</span>
+                </div>
+                <input type="range" class="form-range" min="0.10" max="0.60" step="0.01" value="0.25"
+                  oninput="set('n',this.value,'vn','')">
+              </div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-1" style="font-size:13px">Constant C</label>
+                  <span class="slider-val" id="vC">200 m/min</span>
+                </div>
+                <input type="range" class="form-range" min="50" max="800" step="5" value="200"
+                  oninput="set('C',this.value,'vC','m/min')">
+              </div>
+
+              <div class="section-divider">Time parameters</div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-1" style="font-size:13px">Handling T<sub>h</sub></label>
+                  <span class="slider-val" id="vTh">2.0 min</span>
+                </div>
+                <input type="range" class="form-range" min="0.5" max="10" step="0.5" value="2"
+                  oninput="set('Th',this.value,'vTh','min')">
+              </div>
+              <div class="mb-1">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-1" style="font-size:13px">Tool change T<sub>t</sub></label>
+                  <span class="slider-val" id="vTt">3.0 min</span>
+                </div>
+                <input type="range" class="form-range" min="0.5" max="15" step="0.5" value="3"
+                  oninput="set('Tt',this.value,'vTt','min')">
+              </div>
+
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-8">
+            <div class="d-flex flex-wrap gap-3 mb-2" style="font-size:12px">
+              <span><span class="legend-swatch" style="background:#1D9E75"></span>Total T<sub>c</sub></span>
+              <span><span class="legend-swatch" style="background:#888780"></span>Machining T<sub>m</sub></span>
+              <span><span class="legend-swatch" style="background:#BA7517"></span>Tool change T<sub>t</sub>/n<sub>p</sub></span>
+              <span><span class="legend-swatch" style="background:#378ADD"></span>Handling T<sub>h</sub></span>
+              <span><span class="legend-swatch vline" style="background:#D85A30"></span>v<sub>max</sub></span>
+            </div>
+            <div class="chart-container mb-3"><canvas id="chart0c"></canvas></div>
+            <div class="row g-2 mb-3">
+              <div class="col-6 col-sm-3"><div class="metric-card"><div class="metric-label">v<sub>max</sub></div><div class="metric-val c-teal" id="res_vmax">—</div></div></div>
+              <div class="col-6 col-sm-3"><div class="metric-card"><div class="metric-label">T<sub>max</sub> tool life</div><div class="metric-val c-teal" id="res_Tmax">—</div></div></div>
+              <div class="col-6 col-sm-3"><div class="metric-card"><div class="metric-label">Min cycle T<sub>c</sub></div><div class="metric-val" id="res_Tc">—</div></div></div>
+              <div class="col-6 col-sm-3"><div class="metric-card"><div class="metric-label">Parts / tool n<sub>p</sub></div><div class="metric-val" id="res_np">—</div></div></div>
+            </div>
+            <div class="formula-box">
+              <strong>v<sub>max</sub> = C / [(1/n &minus; 1)&middot;T<sub>t</sub>]<sup>n</sup></strong>
+              &nbsp;&middot;&nbsp;
+              <strong>T<sub>max,life</sub> = (1/n &minus; 1)&middot;T<sub>t</sub></strong><br>
+              T<sub>c</sub> = T<sub>h</sub> + T<sub>m</sub> + T<sub>t</sub>/n<sub>p</sub>
+              &nbsp;&middot;&nbsp; n<sub>p</sub> = T / T<sub>m</sub>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /tab0 -->
+
+      <!-- ══════════════════ TAB 1 ══════════════════ -->
+      <div id="tab1" style="display:none">
+        <div class="row g-3">
+
+          <div class="col-12 col-lg-4">
+            <div class="slider-panel p-3">
+
+              <div class="section-divider">Workpiece geometry</div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-1" style="font-size:13px">Diameter D</label>
+                  <span class="slider-val" id="vD2">50 mm</span>
+                </div>
+                <input type="range" class="form-range" min="10" max="200" step="1" value="50"
+                  oninput="set('D',this.value,'vD2','mm')">
+              </div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-1" style="font-size:13px">Length L</label>
+                  <span class="slider-val" id="vL2">200 mm</span>
+                </div>
+                <input type="range" class="form-range" min="10" max="800" step="1" value="200"
+                  oninput="set('L',this.value,'vL2','mm')">
+              </div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-1" style="font-size:13px">Feed f</label>
+                  <span class="slider-val" id="vf2">0.25 mm/rev</span>
+                </div>
+                <input type="range" class="form-range" min="0.05" max="1.0" step="0.05" value="0.25"
+                  oninput="set('f',this.value,'vf2','mm/rev')">
+              </div>
+
+              <div class="section-divider">Taylor tool life</div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-1" style="font-size:13px">Exponent n</label>
+                  <span class="slider-val" id="vn2">0.25</span>
+                </div>
+                <input type="range" class="form-range" min="0.10" max="0.60" step="0.01" value="0.25"
+                  oninput="set('n',this.value,'vn2','')">
+              </div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-1" style="font-size:13px">Constant C</label>
+                  <span class="slider-val" id="vC2">200 m/min</span>
+                </div>
+                <input type="range" class="form-range" min="50" max="800" step="5" value="200"
+                  oninput="set('C',this.value,'vC2','m/min')">
+              </div>
+
+              <div class="section-divider">Cost parameters</div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-1" style="font-size:13px">Machine rate C<sub>o</sub></label>
+                  <span class="slider-val" id="vCo">1.50 €/min</span>
+                </div>
+                <input type="range" class="form-range" min="0.20" max="5.0" step="0.10" value="1.50"
+                  oninput="set('Co',this.value,'vCo','€/min')">
+              </div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-1" style="font-size:13px">Tool change T<sub>t</sub></label>
+                  <span class="slider-val" id="vTt2">3.0 min</span>
+                </div>
+                <input type="range" class="form-range" min="0.5" max="15" step="0.5" value="3"
+                  oninput="set('Tt',this.value,'vTt2','min')">
+              </div>
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-1" style="font-size:13px">Handling T<sub>h</sub></label>
+                  <span class="slider-val" id="vTh2">2.0 min</span>
+                </div>
+                <input type="range" class="form-range" min="0.5" max="10" step="0.5" value="2"
+                  oninput="set('Th',this.value,'vTh2','min')">
+              </div>
+              <div class="mb-1">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-1" style="font-size:13px">Tooling cost C<sub>t</sub></label>
+                  <span class="slider-val" id="vCt">4.00 €</span>
+                </div>
+                <input type="range" class="form-range" min="0.50" max="30" step="0.50" value="4.00"
+                  oninput="set('Ct',this.value,'vCt','€')">
+              </div>
+
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-8">
+            <div class="d-flex flex-wrap gap-3 mb-2" style="font-size:12px">
+              <span><span class="legend-swatch" style="background:#1D9E75"></span>Total C<sub>c</sub></span>
+              <span><span class="legend-swatch" style="background:#888780"></span>Machining C<sub>o</sub>T<sub>m</sub></span>
+              <span><span class="legend-swatch" style="background:#BA7517"></span>Tool change</span>
+              <span><span class="legend-swatch" style="background:#378ADD"></span>Tooling C<sub>t</sub>/n<sub>p</sub></span>
+              <span><span class="legend-swatch" style="background:#7F77DD"></span>Handling</span>
+              <span><span class="legend-swatch vline" style="background:#D85A30"></span>v<sub>c,min</sub></span>
+            </div>
+            <div class="chart-container mb-3"><canvas id="chart1c"></canvas></div>
+            <div class="row g-2 mb-3">
+              <div class="col-6 col-sm-3"><div class="metric-card"><div class="metric-label">v<sub>c,min</sub></div><div class="metric-val c-teal" id="res_vcmin">—</div></div></div>
+              <div class="col-6 col-sm-3"><div class="metric-card"><div class="metric-label">T<sub>min</sub> tool life</div><div class="metric-val c-teal" id="res_Tmin">—</div></div></div>
+              <div class="col-6 col-sm-3"><div class="metric-card"><div class="metric-label">Min cost C<sub>c</sub></div><div class="metric-val c-amber" id="res_Cc">—</div></div></div>
+              <div class="col-6 col-sm-3"><div class="metric-card"><div class="metric-label">Parts / tool n<sub>p</sub></div><div class="metric-val" id="res_np2">—</div></div></div>
+            </div>
+            <div class="formula-box">
+              <strong>v<sub>c,min</sub> = C&middot;[n/(1&minus;n)&middot;C<sub>o</sub>/(C<sub>o</sub>T<sub>t</sub>+C<sub>t</sub>)]<sup>n</sup></strong><br>
+              <strong>T<sub>min</sub> = (1/n &minus; 1)&middot;(C<sub>o</sub>T<sub>t</sub>+C<sub>t</sub>) / C<sub>o</sub></strong><br>
+              C<sub>c</sub> = C<sub>o</sub>T<sub>h</sub> + C<sub>o</sub>T<sub>m</sub> + (C<sub>o</sub>T<sub>t</sub>+C<sub>t</sub>)/n<sub>p</sub>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /tab1 -->
+
+      <!-- ══════════════════ TAB 2 ══════════════════ -->
+      <div id="tab2" style="display:none">
+
+        <div class="slider-panel p-3 mb-3">
+          <div class="row g-3">
+
+            <div class="col-12 col-sm-6 col-md-4">
+              <div class="section-divider">Workpiece</div>
+              <div class="mb-2">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-0" style="font-size:12px">Diameter D</label>
+                  <span class="slider-val" id="o_D">50 mm</span>
+                </div>
+                <input type="range" class="form-range" min="10" max="200" step="1" value="50"
+                  oninput="set('D',this.value,'o_D','mm')">
+              </div>
+              <div class="mb-2">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-0" style="font-size:12px">Length L</label>
+                  <span class="slider-val" id="o_L">200 mm</span>
+                </div>
+                <input type="range" class="form-range" min="10" max="800" step="1" value="200"
+                  oninput="set('L',this.value,'o_L','mm')">
+              </div>
+              <div class="mb-2">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-0" style="font-size:12px">Feed f</label>
+                  <span class="slider-val" id="o_f">0.25 mm/rev</span>
+                </div>
+                <input type="range" class="form-range" min="0.05" max="1.0" step="0.05" value="0.25"
+                  oninput="set('f',this.value,'o_f','mm/rev')">
+              </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-4">
+              <div class="section-divider">Taylor &amp; time</div>
+              <div class="mb-2">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-0" style="font-size:12px">Exponent n</label>
+                  <span class="slider-val" id="o_n">0.25</span>
+                </div>
+                <input type="range" class="form-range" min="0.10" max="0.60" step="0.01" value="0.25"
+                  oninput="set('n',this.value,'o_n','')">
+              </div>
+              <div class="mb-2">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-0" style="font-size:12px">Constant C</label>
+                  <span class="slider-val" id="o_C">200 m/min</span>
+                </div>
+                <input type="range" class="form-range" min="50" max="800" step="5" value="200"
+                  oninput="set('C',this.value,'o_C','m/min')">
+              </div>
+              <div class="mb-2">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-0" style="font-size:12px">Handling T<sub>h</sub></label>
+                  <span class="slider-val" id="o_Th">2.0 min</span>
+                </div>
+                <input type="range" class="form-range" min="0.5" max="10" step="0.5" value="2"
+                  oninput="set('Th',this.value,'o_Th','min')">
+              </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-4">
+              <div class="section-divider">Cost</div>
+              <div class="mb-2">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-0" style="font-size:12px">Machine rate C<sub>o</sub></label>
+                  <span class="slider-val" id="o_Co">1.50 €/min</span>
+                </div>
+                <input type="range" class="form-range" min="0.20" max="5.0" step="0.10" value="1.50"
+                  oninput="set('Co',this.value,'o_Co','€/min')">
+              </div>
+              <div class="mb-2">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-0" style="font-size:12px">Tool change T<sub>t</sub></label>
+                  <span class="slider-val" id="o_Tt">3.0 min</span>
+                </div>
+                <input type="range" class="form-range" min="0.5" max="15" step="0.5" value="3"
+                  oninput="set('Tt',this.value,'o_Tt','min')">
+              </div>
+              <div class="mb-2">
+                <div class="d-flex justify-content-between align-items-baseline">
+                  <label class="form-label font-mono text-secondary mb-0" style="font-size:12px">Tooling cost C<sub>t</sub></label>
+                  <span class="slider-val" id="o_Ct">4.00 €</span>
+                </div>
+                <input type="range" class="form-range" min="0.50" max="30" step="0.50" value="4.00"
+                  oninput="set('Ct',this.value,'o_Ct','€')">
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-3 mb-2" style="font-size:12px">
+          <span><span class="legend-swatch" style="background:#1a1a18;height:3px"></span>Total cost C<sub>c</sub></span>
+          <span><span class="legend-swatch" style="background:#888780"></span>Machining</span>
+          <span><span class="legend-swatch" style="background:#BA7517"></span>Tool change</span>
+          <span><span class="legend-swatch" style="background:#378ADD"></span>Tooling</span>
+          <span><span class="legend-swatch" style="background:#7F77DD"></span>Handling</span>
+          <span><span class="legend-swatch vline" style="background:#D85A30"></span>v<sub>c,opt</sub></span>
+          <span><span class="legend-swatch vline" style="background:#BA7517"></span>v<sub>max</sub></span>
+        </div>
+
+        <div class="chart-container-lg mb-3"><canvas id="chart2c"></canvas></div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-6 col-sm-3"><div class="metric-card"><div class="metric-label">v<sub>c,opt</sub> cost min</div><div class="metric-val c-teal"  id="o_res_vc">—</div></div></div>
+          <div class="col-6 col-sm-3"><div class="metric-card"><div class="metric-label">v<sub>max</sub> rate max</div><div class="metric-val c-amber" id="o_res_vm">—</div></div></div>
+          <div class="col-6 col-sm-3"><div class="metric-card"><div class="metric-label">Min cost C<sub>c</sub></div><div class="metric-val c-coral" id="o_res_cc">—</div></div></div>
+          <div class="col-6 col-sm-3"><div class="metric-card"><div class="metric-label">Opt. tool life T</div><div class="metric-val" id="o_res_tl">—</div></div></div>
+        </div>
+
+        <div class="formula-box">
+          <strong>v<sub>c,opt</sub> = C&middot;[n/(1&minus;n)&middot;C<sub>o</sub>/(C<sub>o</sub>T<sub>t</sub>+C<sub>t</sub>)]<sup>n</sup></strong>
+          &nbsp;&middot;&nbsp;
+          <strong>v<sub>max</sub> = C / [(1/n&minus;1)&middot;T<sub>t</sub>]<sup>n</sup></strong><br>
+          C<sub>c</sub> = C<sub>o</sub>T<sub>h</sub> + C<sub>o</sub>T<sub>m</sub> + (C<sub>o</sub>T<sub>t</sub>+C<sub>t</sub>)/n<sub>p</sub>
+          &nbsp;&middot;&nbsp; v<sub>c,opt</sub> (cost) &lt; v<sub>max</sub> (rate) always
+        </div>
+
+      </div><!-- /tab2 -->
+
+      <hr class="mt-4 mb-2">
+      <p class="text-secondary font-mono mb-0" style="font-size:11px">
+        Source: M. P. Groover, &ldquo;Fundamentals of Modern Manufacturing&rdquo;, 2nd ed., Ch.&nbsp;24.3
+        &middot; Dr.-Ing. Thomas M. Rudolf
+      </p>
+
+    </div>
+  </div>
+</div><!-- /container -->
+
+<script>
+/* ══════════════════════════════════════════════
+   Single shared state
+   ══════════════════════════════════════════════ */
+const p = { D:50, L:200, f:0.25, n:0.25, C:200, Th:2, Tt:3, Co:1.50, Ct:4.00 };
+let activeTab = 0;
+const chartInst = {};
+
+const SLIDER_MAP = {
+  /* tab 0 */
+  vD:   ['D', 0,'mm'],       vL:   ['L', 0,'mm'],     vf:   ['f', 2,'mm/rev'],
+  vn:   ['n', 2,''],         vC:   ['C', 0,'m/min'],   vTh:  ['Th',1,'min'],  vTt:  ['Tt',1,'min'],
+  /* tab 1 */
+  vD2:  ['D', 0,'mm'],       vL2:  ['L', 0,'mm'],     vf2:  ['f', 2,'mm/rev'],
+  vn2:  ['n', 2,''],         vC2:  ['C', 0,'m/min'],   vCo:  ['Co',2,'€/min'],
+  vTt2: ['Tt',1,'min'],      vTh2: ['Th',1,'min'],    vCt:  ['Ct',2,'€'],
+  /* tab 2 */
+  o_D:  ['D', 0,'mm'],       o_L:  ['L', 0,'mm'],     o_f:  ['f', 2,'mm/rev'],
+  o_n:  ['n', 2,''],         o_C:  ['C', 0,'m/min'],   o_Co: ['Co',2,'€/min'],
+  o_Tt: ['Tt',1,'min'],      o_Th: ['Th',1,'min'],    o_Ct: ['Ct',2,'€']
+};
+
+function fmt(key, prec, unit) {
+  return p[key].toFixed(prec) + (unit ? ' '+unit : '');
+}
+
+function syncAllSliders() {
+  Object.entries(SLIDER_MAP).forEach(([id,[key,prec,unit]]) => {
+    const lbl = document.getElementById(id);
+    if (lbl) lbl.textContent = fmt(key, prec, unit);
+    document.querySelectorAll(`input[type=range][oninput*="${id}"]`)
+      .forEach(inp => { inp.value = p[key]; });
+  });
+}
+
+function set(key, val) {
+  p[key] = parseFloat(val);
+  syncAllSliders();
+  redraw();
+}
+
+/* ══════════════════════════════════════════════
+   Physics
+   ══════════════════════════════════════════════ */
+function Tm(vc)       { return (Math.PI*p.D*p.L) / (vc*1000/60*p.f*1000); }
+function toolLife(vc) { return Math.pow(p.C/vc, 1/p.n); }
+function np_val(vc)   { return toolLife(vc)/Tm(vc); }
+function calcTc(vc)   { return p.Th + Tm(vc) + p.Tt/np_val(vc); }
+function calcCc(vc)   { return p.Co*p.Th + p.Co*Tm(vc) + (p.Co*p.Tt+p.Ct)/np_val(vc); }
+function vcmin_opt()  { return p.C * Math.pow(p.n/(1-p.n)*p.Co/(p.Co*p.Tt+p.Ct), p.n); }
+function vmax_opt()   { return p.C / Math.pow((1/p.n-1)*p.Tt, p.n); }
+
+/* ══════════════════════════════════════════════
+   Chart helpers
+   ══════════════════════════════════════════════ */
+function axisColor() { return isDark() ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'; }
+function gridColor() { return isDark() ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'; }
+
+function makeSeries(vCenter, N=130) {
+  const vLow=Math.max(vCenter*0.13,3), vHigh=vCenter*4.0;
+  const vs=[],tms=[],ttns=[],ths=[],totals=[],cmachs=[],ctoolchanges=[],ctoolings=[],chandlings=[],ctotals=[];
+  for (let i=0;i<N;i++) {
+    const vc = vLow+(vHigh-vLow)*(i/(N-1));
+    vs.push(vc);
+    const tm=Tm(vc), np=np_val(vc);
+    tms.push(tm); ttns.push(p.Tt/np); ths.push(p.Th); totals.push(p.Th+tm+p.Tt/np);
+    cmachs.push(p.Co*tm); ctoolchanges.push(p.Co*p.Tt/np);
+    ctoolings.push(p.Ct/np); chandlings.push(p.Co*p.Th);
+    ctotals.push(p.Co*p.Th+p.Co*tm+(p.Co*p.Tt+p.Ct)/np);
+  }
+  return {vs,tms,ttns,ths,totals,cmachs,ctoolchanges,ctoolings,chandlings,ctotals};
+}
+
+function vertLine(vs, tv, yMax) {
+  const idx=vs.findIndex(v=>v>=tv);
+  return vs.map((_,i)=>i===idx?yMax:null);
+}
+
+function baseOpts(yLabel, labels, yMax, isCost) {
+  return {
+    responsive:true, maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{
+        title: items=>'v = '+parseFloat(items[0].label).toFixed(1)+' m/min',
+        label: ctx=>{
+          if(['v_opt','vc,opt','vmax'].includes(ctx.dataset.label)) return null;
+          return ctx.dataset.label+': '+(isCost?'€':'')+ctx.raw.toFixed(isCost?4:3)+(isCost?'':' min');
+        }
+      }}
+    },
+    scales:{
+      x:{
+        title:{display:true,text:'Cutting speed vc (m/min)',color:axisColor(),font:{size:12,family:'Courier New'}},
+        ticks:{color:axisColor(),maxTicksLimit:9,callback:(_,i)=>parseFloat(labels[i]).toFixed(0),font:{family:'Courier New',size:11}},
+        grid:{color:gridColor()}
+      },
+      y:{
+        title:{display:true,text:yLabel,color:axisColor(),font:{size:12,family:'Courier New'}},
+        min:0, ...(yMax?{max:yMax}:{}),
+        ticks:{color:axisColor(),font:{family:'Courier New',size:11},...(isCost?{callback:v=>'€'+v.toFixed(2)}:{})},
+        grid:{color:gridColor()}
+      }
+    }
+  };
+}
+
+/* ══════════════════════════════════════════════
+   Draw functions
+   ══════════════════════════════════════════════ */
+function drawTab0() {
+  const vm=vmax_opt(), s=makeSeries(vm);
+  const Tmax=(1/p.n-1)*p.Tt;
+  document.getElementById('res_vmax').textContent = vm.toFixed(1)+' m/min';
+  document.getElementById('res_Tmax').textContent = Tmax.toFixed(2)+' min';
+  document.getElementById('res_Tc').textContent   = calcTc(vm).toFixed(3)+' min';
+  document.getElementById('res_np').textContent   = Math.max(0,np_val(vm)).toFixed(1)+' pcs';
+  const labels=s.vs.map(v=>v.toFixed(1)), yMax=Math.max(...s.totals)*1.08;
+  if (chartInst[0]) chartInst[0].destroy();
+  chartInst[0]=new Chart(document.getElementById('chart0c'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Tc total',data:s.totals,  borderColor:'#1D9E75',borderWidth:2,  tension:0.3,pointRadius:0,fill:false},
+      {label:'Tm',      data:s.tms,     borderColor:'#888780',borderWidth:1.5,tension:0.3,pointRadius:0,fill:false,borderDash:[4,3]},
+      {label:'Tt/np',   data:s.ttns,    borderColor:'#BA7517',borderWidth:1.5,tension:0.3,pointRadius:0,fill:false,borderDash:[4,3]},
+      {label:'Th',      data:s.ths,     borderColor:'#378ADD',borderWidth:1.5,tension:0.3,pointRadius:0,fill:false,borderDash:[2,4]},
+      {label:'v_opt',   data:vertLine(s.vs,vm,yMax),borderColor:'#D85A30',borderWidth:2,pointRadius:0,fill:false,borderDash:[5,4],spanGaps:false,tension:0},
+    ]},
+    options:baseOpts('Time per part (min)',labels,null,false)
+  });
+}
+
+function drawTab1() {
+  const vc=vcmin_opt(), s=makeSeries(vc);
+  const Tmin=(1/p.n-1)*(p.Co*p.Tt+p.Ct)/p.Co;
+  document.getElementById('res_vcmin').textContent = vc.toFixed(1)+' m/min';
+  document.getElementById('res_Tmin').textContent  = Tmin.toFixed(2)+' min';
+  document.getElementById('res_Cc').textContent    = calcCc(vc).toFixed(3)+' €';
+  document.getElementById('res_np2').textContent   = Math.max(0,np_val(vc)).toFixed(1)+' pcs';
+  const labels=s.vs.map(v=>v.toFixed(1)), yMax=Math.max(...s.ctotals)*1.08;
+  if (chartInst[1]) chartInst[1].destroy();
+  chartInst[1]=new Chart(document.getElementById('chart1c'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Cc total',   data:s.ctotals,     borderColor:'#1D9E75',borderWidth:2,  tension:0.3,pointRadius:0,fill:false},
+      {label:'Machining',  data:s.cmachs,      borderColor:'#888780',borderWidth:1.5,tension:0.3,pointRadius:0,fill:false,borderDash:[4,3]},
+      {label:'Tool change',data:s.ctoolchanges,borderColor:'#BA7517',borderWidth:1.5,tension:0.3,pointRadius:0,fill:false,borderDash:[4,3]},
+      {label:'Tooling',    data:s.ctoolings,   borderColor:'#378ADD',borderWidth:1.5,tension:0.3,pointRadius:0,fill:false,borderDash:[4,3]},
+      {label:'Handling',   data:s.chandlings,  borderColor:'#7F77DD',borderWidth:1.5,tension:0.3,pointRadius:0,fill:false,borderDash:[2,4]},
+      {label:'v_opt',      data:vertLine(s.vs,vc,yMax),borderColor:'#D85A30',borderWidth:2,pointRadius:0,fill:false,borderDash:[5,4],spanGaps:false,tension:0},
+    ]},
+    options:baseOpts('Cost per part (€)',labels,null,true)
+  });
+}
+
+function drawTab2() {
+  const vc=vcmin_opt(), vm=vmax_opt(), s=makeSeries(vc,150);
+  const Topt=(1/p.n-1)*(p.Co*p.Tt+p.Ct)/p.Co;
+  document.getElementById('o_res_vc').textContent = vc.toFixed(1)+' m/min';
+  document.getElementById('o_res_vm').textContent = vm.toFixed(1)+' m/min';
+  document.getElementById('o_res_cc').textContent = '€'+calcCc(vc).toFixed(3);
+  document.getElementById('o_res_tl').textContent = Topt.toFixed(2)+' min';
+  const labels=s.vs.map(v=>v.toFixed(1)), yMax=Math.max(...s.ctotals)*1.15;
+  if (chartInst[2]) chartInst[2].destroy();
+  chartInst[2]=new Chart(document.getElementById('chart2c'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Total cost', data:s.ctotals,     borderColor:isDark()?'#e8e4de':'#1a1a18',borderWidth:3,  tension:0.35,pointRadius:0,fill:false,order:1},
+      {label:'Machining',  data:s.cmachs,      borderColor:'#888780',borderWidth:1.5,tension:0.35,pointRadius:0,fill:false,order:2},
+      {label:'Tool change',data:s.ctoolchanges,borderColor:'#BA7517',borderWidth:1.5,tension:0.35,pointRadius:0,fill:false,borderDash:[5,4],order:3},
+      {label:'Tooling',    data:s.ctoolings,   borderColor:'#378ADD',borderWidth:1.5,tension:0.35,pointRadius:0,fill:false,borderDash:[3,3],order:4},
+      {label:'Handling',   data:s.chandlings,  borderColor:'#7F77DD',borderWidth:1.5,tension:0.35,pointRadius:0,fill:false,borderDash:[2,5],order:5},
+      {label:'vc,opt',     data:vertLine(s.vs,vc,yMax),borderColor:'#D85A30',borderWidth:2.5,pointRadius:0,fill:false,borderDash:[6,4],spanGaps:false,tension:0,order:0},
+      {label:'vmax',       data:vertLine(s.vs,vm,yMax),borderColor:'#BA7517',borderWidth:2,  pointRadius:0,fill:false,borderDash:[3,5],spanGaps:false,tension:0,order:0},
+    ]},
+    options:baseOpts('Production cost per part (€)',labels,yMax,true)
+  });
+}
+
+function redraw() {
+  if (activeTab===0) drawTab0();
+  else if (activeTab===1) drawTab1();
+  else drawTab2();
+}
+
+function setTab(idx) {
+  activeTab=idx;
+  document.querySelectorAll('#mainTabs .nav-link')
+    .forEach((btn,i)=>btn.classList.toggle('active',i===idx));
+  document.getElementById('tab0').style.display = idx===0?'':'none';
+  document.getElementById('tab1').style.display = idx===1?'':'none';
+  document.getElementById('tab2').style.display = idx===2?'':'none';
+  redraw();
+}
+
+function isDark() {
+  return document.documentElement.getAttribute('data-bs-theme') === 'dark';
+}
+
+function toggleTheme() {
+  const dark = isDark();
+  document.documentElement.setAttribute('data-bs-theme', dark ? 'light' : 'dark');
+  const icon = document.getElementById('themeIcon');
+  const label = document.getElementById('themeLabel');
+  if (dark) {
+    /* switched to light — show moon icon to go back to dark */
+    icon.innerHTML = '<path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/>';
+    label.textContent = 'Dark mode';
+  } else {
+    /* switched to dark — show crescent to go back to light */
+    icon.innerHTML = '<path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278"/>';
+    label.textContent = 'Light mode';
+  }
+  redraw();
+}
+
+window.addEventListener('load', ()=>{ syncAllSliders(); redraw(); });
+</script>
+</body>
+</html>
