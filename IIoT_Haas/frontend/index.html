@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<!-- Dokumenttyp-Deklaration: teilt dem Browser mit, dass dies HTML5 ist -->
+
+<html lang="de" data-bs-theme="dark">
+<!-- lang wird von setLanguage() dynamisch auf "en", "de" oder "es" gesetzt -->
+<!-- data-bs-theme="dark": Bootstrap 5.3 aktiviert damit automatisch den Dunkelmodus -->
+
+<head>
+  <!-- HEAD-Bereich: enthält Metadaten, Stylesheets und Seitentitel (wird nicht angezeigt) -->
+
+  <meta charset="UTF-8"/>
+  <!-- Zeichenkodierung: UTF-8 unterstützt alle Sonderzeichen, Umlaute und Sonderzeichen aller Sprachen -->
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <!-- Viewport-Einstellung: passt die Darstellung auf Mobilgeräte an (responsive Design) -->
+
+  <title data-i18n="pageTitle">CNC Fräsmaschinen-Dashboard — TM-1P</title>
+  <!-- data-i18n: eigenes Attribut → setLanguage() sucht alle Elemente mit diesem Attribut
+       und ersetzt deren Textinhalt mit dem Übersetzungsschlüssel aus dem i18n-Dictionary -->
+
+  <!-- Bootstrap 5.3 CSS: stellt das Rastersystem, Karten, Buttons, Tabellen, Modal usw. bereit -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+
+  <!-- Bootstrap Icons: Vektorsymbole als CSS-Klassen (z.B. bi bi-tools, bi bi-speedometer2) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+
+  <!-- Google Font "Share Tech Mono": Monospace-Schrift für Messwerte und Koordinaten -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap"/>
+
+  <!-- Eigene Stildatei: Farbvariablen, Canvas-Regeln, Tachometer-Layouts, CRT-Effekt usw. -->
+  <link rel="stylesheet" href="../css/styles_iiot.css"/>
+
+  <style>
+    /* ── Sprachschalter-Styling ──────────────────────────────────────────── */
+    /* Drei Flaggen/Kürzel-Buttons in der Navbar rechts neben der Uhr */
+    .lang-btn {
+      background: transparent;
+      border: 1px solid #1e2d40;        /* Dezenter Rahmen in der Hintergrundfarbe */
+      border-radius: 3px;
+      color: #566779;                   /* Gedämpfte Standardfarbe */
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .7rem;
+      letter-spacing: 1px;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: color .2s, border-color .2s;   /* Sanfter Farbübergang beim Hover */
+    }
+    .lang-btn:hover {
+      color: #c8dce8;
+      border-color: #3a4a5c;
+    }
+    .lang-btn.active {
+      /* Aktive Sprache: Cyan-Akzent und leuchtender Rand */
+      color: #0dcaf0;
+      border-color: #0dcaf0;
+      box-shadow: 0 0 6px rgba(13, 202, 240, .3);
+    }
+  </style>
+
+</head>
+
+<body>
+<!-- BODY-Bereich: alles was hier steht wird im Browser angezeigt -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!--  KONFIGURATIONSMODAL                                                    -->
+<!--  Erscheint beim ersten Start oder beim Klick auf das Zahnrad-Symbol.   -->
+<!--  Hier werden IP, Port, Sensor-URL und Backend-URL eingegeben.          -->
+<!--  Alle sichtbaren Texte tragen data-i18n-Attribute für die Übersetzung. -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+<div class="modal fade"
+     id="configModal"
+     data-bs-backdrop="static"
+     tabindex="-1"
+     aria-labelledby="configModalLabel"
+     aria-hidden="true">
+  <!-- modal fade: Bootstrap-Modal mit Ein-/Ausblend-Animation -->
+  <!-- data-bs-backdrop="static": Modal kann NICHT durch Klick auf den Hintergrund geschlossen werden -->
+
+  <div class="modal-dialog modal-dialog-centered">
+    <!-- modal-dialog-centered: zentriert das Modal vertikal auf dem Bildschirm -->
+
+    <div class="modal-content">
+
+      <!-- Kopfzeile des Modals -->
+      <div class="modal-header border-secondary py-2">
+        <h5 class="modal-title mono text-accent"
+            id="configModalLabel"
+            style="letter-spacing:2px; font-size:.95rem;">
+          <i class="bi bi-router me-2"></i>
+          <span data-i18n="modalTitle">MTCONNECT ENDPUNKT</span>
+          <!-- data-i18n="modalTitle": Schlüssel im i18n-Dictionary → wird übersetzt -->
+        </h5>
+      </div>
+
+      <!-- Hauptinhalt des Modals (die Eingabefelder) -->
+      <div class="modal-body">
+
+        <!-- Erklärungstext über den Eingabefeldern -->
+        <p class="lbl mb-3" data-i18n="modalDesc">
+          Gerät-IP eingeben — Daten werden von
+          <code>/sample</code>, <code>/current</code> und <code>/probe</code> gelesen
+        </p>
+
+        <!-- CORS info banner — shown always -->
+        <div class="alert alert-secondary py-2 mb-3 lbl" style="font-size:.7rem; border:1px solid #1e2d40; background:#0d1420;">
+          <i class="bi bi-shield-exclamation me-1" style="color:#fd7e14;"></i>
+          <span style="color:#fd7e14;">CORS:</span>
+          <span style="color:#566779;">
+            Browser blockieren direkte Anfragen an den MTConnect-Agent.
+            Trage die <strong style="color:#0dcaf0;">Backend-URL</strong> ein —
+            alle XML-Anfragen werden dann server-seitig proxiert (kein CORS-Problem).
+          </span>
+        </div>
+        <!-- data-i18n auf einem p-Tag mit code-Elementen:
+             Der Inhalt wird per innerHTML ersetzt → code-Tags bleiben erhalten
+             weil die Übersetzungen ebenfalls HTML-Strings enthalten -->
+
+        <!-- ─── Eingabefeld: IP-Adresse ─────────────────────────────────── -->
+        <label class="lbl mb-1" for="inputIP" data-i18n="labelIP">GERÄT IP-ADRESSE</label>
+        <div class="input-group mb-3">
+          <span class="input-group-text border-secondary modal-input-bg">
+            <i class="bi bi-hdd-network text-secondary"></i>
+          </span>
+          <input id="inputIP"
+                 type="text"
+                 class="form-control border-secondary mono text-info modal-input-bg"
+                 placeholder="192.168.1.100"
+                 autocomplete="off"
+                 spellcheck="false"/>
+        </div>
+
+        <!-- ─── Eingabefeld: Port ────────────────────────────────────────── -->
+        <label class="lbl mb-1" for="inputPort">
+          <span data-i18n="labelPort">PORT</span>
+          <span class="text-secondary" data-i18n="labelPortHint">(Standard 8082)</span>
+        </label>
+        <div class="input-group mb-3">
+          <span class="input-group-text border-secondary modal-input-bg">
+            <i class="bi bi-plug text-secondary"></i>
+          </span>
+          <input id="inputPort"
+                 type="text"
+                 class="form-control border-secondary mono text-info modal-input-bg"
+                 placeholder="8082"
+                 autocomplete="off"/>
+        </div>
+
+        <!-- ─── Trennlinie ────────────────────────────────────────────────── -->
+        <div class="lbl mb-2" style="border-top:1px solid #1e2d40; padding-top:10px;">
+          CORS-LÖSUNG — eine der folgenden Optionen wählen:
+        </div>
+
+        <!-- ─── Option A: CORS-Proxy (empfohlen) ─────────────────────────── -->
+        <!-- Startet cors_proxy.py lokal → leitet XML server-seitig weiter    -->
+        <label class="lbl mb-1" for="inputProxy">
+          <span style="color:#20c997;">▶ OPTION A</span>
+          — CORS PROXY URL
+          <span class="text-secondary">(cors_proxy.py)</span>
+        </label>
+        <div class="input-group mb-1">
+          <span class="input-group-text border-secondary modal-input-bg">
+            <i class="bi bi-arrow-left-right" style="color:#20c997;"></i>
+          </span>
+          <input id="inputProxy"
+                 type="text"
+                 class="form-control border-secondary mono modal-input-bg"
+                 style="color:#20c997;"
+                 placeholder="http://localhost:8888"
+                 autocomplete="off"/>
+        </div>
+        <!-- Befehl zum Starten des Proxys — direkt kopierbar -->
+        <div class="lbl mb-3" style="background:#060e18; border:1px solid #1a2535;
+             border-radius:4px; padding:7px 10px; font-size:.68rem; color:#3a4a5c;">
+          <span style="color:#20c997; user-select:all;">python cors_proxy.py --mtc-host 148.205.38.221 --mtc-port 8082</span>
+        </div>
+
+        <!-- ─── Option B: Python-Backend (Docker) ────────────────────────── -->
+        <label class="lbl mb-1" for="inputBackend">
+          <span style="color:#0dcaf0;">▶ OPTION B</span>
+          — PYTHON BACKEND URL
+          <span class="text-secondary">(Docker)</span>
+        </label>
+        <div class="input-group mb-3">
+          <span class="input-group-text border-secondary modal-input-bg">
+            <i class="bi bi-database" style="color:#0dcaf0;"></i>
+          </span>
+          <input id="inputBackend"
+                 type="text"
+                 class="form-control border-secondary mono modal-input-bg"
+                 style="color:#0dcaf0;"
+                 placeholder="http://localhost:8080"
+                 autocomplete="off"/>
+        </div>
+
+        <!-- ─── Stromsensor-URL (optional, zukünftig) ────────────────────── -->
+        <label class="lbl mb-1" for="inputSensor">
+          STROMSENSOR-URL
+          <span class="text-secondary">(optional — zukünftig)</span>
+        </label>
+        <div class="input-group mb-3">
+          <span class="input-group-text border-secondary modal-input-bg">
+            <i class="bi bi-lightning text-secondary"></i>
+          </span>
+          <input id="inputSensor"
+                 type="text"
+                 class="form-control border-secondary mono modal-input-bg"
+                 style="color:#566779;"
+                 placeholder="http://192.168.1.101:7878/current"
+                 autocomplete="off"/>
+        </div>
+
+        <!-- Feedback-Bereich: zeigt Verbindungsstatus an (grün/rot/grau) -->
+        <div id="connFeedback" class="alert py-2 mb-0 d-none" role="alert"></div>
+        <!-- d-none: zunächst versteckt; app.js macht ihn sichtbar nach dem Verbindungsversuch -->
+
+      </div><!-- /modal-body -->
+
+      <!-- Fußzeile des Modals mit dem Verbinden-Button -->
+      <div class="modal-footer border-secondary py-2">
+        <button class="btn btn-outline-info w-100 mono"
+                style="letter-spacing:2px;"
+                onclick="applyConfig()">
+          <!-- onclick="applyConfig()": ruft die Funktion in app.js auf -->
+          <i class="bi bi-arrow-right-circle me-2"></i>
+          <span data-i18n="btnConnect">VERBINDEN</span>
+        </button>
+      </div>
+
+    </div><!-- /modal-content -->
+  </div><!-- /modal-dialog -->
+</div><!-- /configModal -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!--  NAVIGATIONSLEISTE (Navbar)                                             -->
+<!--  Zeigt Logo, Gerätename, Statusbadges, Uhr, Sprache und Einstellungen  -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+<nav class="navbar navbar-dark px-3 py-2">
+  <!-- navbar navbar-dark: Bootstrap-Navigationsleiste im Dunkelmodus -->
+
+  <!-- Linke Seite: Logo + Gerätename -->
+  <div class="d-flex align-items-center gap-2">
+
+    <!-- Logo-Icon (Zahnrad-Symbol mit Leuchtrahmen aus styles.css) -->
+    <span class="brand-icon">⚙</span>
+
+    <div>
+      <span class="navbar-brand mb-0 text-white fw-bold"
+            style="letter-spacing:2px; font-size:.95rem;"
+            data-i18n="navTitle">
+        FRÄSMASCHINEN-PROZESS-MONITOR
+      </span><br>
+      <!-- Untertitel mit festen technischen Angaben (keine Übersetzung nötig) -->
+      <span class="lbl">HAAS TM-1P &nbsp;·&nbsp; MTConnect 1.2 &nbsp;·&nbsp; S/N 1131432</span>
+    </div>
+  </div>
+
+  <!-- Rechte Seite: Statusbadges + Uhr + Sprachschalter + Einstellungsbutton -->
+  <div class="d-flex align-items-center gap-2 flex-wrap">
+    <!-- flex-wrap: Elemente umbrechen wenn der Platz nicht reicht -->
+
+    <!-- Maschinenstatus-Badge -->
+    <span id="machineStatus"
+          class="badge d-flex align-items-center gap-1 px-2 py-1 border border-success text-success bg-success bg-opacity-10"
+          style="font-size:.68rem; letter-spacing:1px;">
+      <span class="pulse-dot"></span>
+      <!-- pulse-dot: pulsierender Punkt aus styles.css -->
+      <span id="statusText" data-i18n="statusActive">AKTIV</span>
+    </span>
+
+    <!-- Alarmstatus-Badge -->
+    <span id="alarmStatus"
+          class="badge d-flex align-items-center gap-1 px-2 py-1 border border-success text-success bg-success bg-opacity-10"
+          style="font-size:.68rem; letter-spacing:1px;">
+      <span class="pulse-dot"></span>
+      <span id="alarmText" data-i18n="statusNoAlarm">KEIN ALARM</span>
+    </span>
+
+    <!-- Wanduhr: wird von tickClock() in app.js jede Sekunde aktualisiert -->
+    <span id="wallClock" class="mono text-accent" style="font-size:.95rem; letter-spacing:2px;">
+      --:--:--
+    </span>
+
+    <!-- ── Sprachschalter: drei Buttons (EN / DE / ES) ─────────────────── -->
+    <!-- setLanguage() in i18n.js wird beim Klick aufgerufen               -->
+    <!-- Die aktive Sprache erhält die CSS-Klasse "active" (Cyan-Farbe)    -->
+    <div class="d-flex gap-1">
+      <button class="lang-btn" id="lang-en" onclick="setLanguage('en')">EN</button>
+      <button class="lang-btn active" id="lang-de" onclick="setLanguage('de')">DE</button>
+      <button class="lang-btn" id="lang-es" onclick="setLanguage('es')">ES</button>
+    </div>
+    <!-- lang-btn active: Standardsprache Deutsch ist beim Start aktiv -->
+
+    <!-- Zahnrad-Button: öffnet das Konfigurationsmodal -->
+    <button class="btn btn-sm btn-outline-secondary"
+            data-bs-toggle="modal"
+            data-bs-target="#configModal"
+            title="Configure endpoint">
+      <i class="bi bi-gear-fill"></i>
+    </button>
+
+  </div>
+</nav><!-- /navbar -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!--  TAB-LEISTE                                                             -->
+<!--  Vier Tabs: Übersicht, Achsleistung, Trajektorie, Stromsensor           -->
+<!--  Alle Tab-Beschriftungen tragen data-i18n-Attribute                     -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+<ul class="nav nav-tabs" id="mainTabs" role="tablist">
+  <!-- nav nav-tabs: Bootstrap-Komponente für Tab-Navigation -->
+
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button" role="tab">
+      <i class="bi bi-grid-3x3-gap me-1"></i>
+      <span data-i18n="tabOverview">ÜBERSICHT</span>
+    </button>
+  </li>
+
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-axes" type="button" role="tab">
+      <i class="bi bi-speedometer2 me-1"></i>
+      <span data-i18n="tabAxes">ACHSLEISTUNG</span>
+    </button>
+  </li>
+
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-trajectory" type="button" role="tab">
+      <i class="bi bi-bezier2 me-1"></i>
+      <span data-i18n="tabTrajectory">TRAJEKTORIE</span>
+    </button>
+  </li>
+
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-sensor" type="button" role="tab">
+      <i class="bi bi-lightning-charge me-1"></i>
+      <span data-i18n="tabSensor">STROMSENSOR</span>
+    </button>
+  </li>
+
+</ul><!-- /nav nav-tabs -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!--  TAB-INHALTE                                                            -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+<div class="tab-content p-3" id="mainTabContent">
+  <!-- tab-content: Bootstrap-Container der alle Tab-Panels enthält -->
+  <!-- p-3: Innenabstand 1rem auf allen Seiten -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- TAB 1 — ÜBERSICHT                                                   -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+  <div class="tab-pane fade show active" id="tab-overview" role="tabpanel">
+    <!-- tab-pane fade show active: dieser Panel ist beim Start sichtbar -->
+
+    <!-- Alarm-Banner: wird von renderUI() in app.js dynamisch aktualisiert -->
+    <div id="alertBar"
+         class="alert alert-success border-success d-flex align-items-center gap-2 py-2 mb-3"
+         style="font-size:.78rem;">
+      <i class="bi bi-check-circle-fill"></i>
+      <span data-i18n="alertOk">MASCHINENZUSTAND NORMAL &nbsp;|&nbsp; KEINE AKTIVEN ALARME</span>
+    </div>
+
+    <!-- Bootstrap-Raster: 1 → 2 → 4 Spalten je nach Bildschirmbreite -->
+    <div class="row g-3">
+
+      <!-- ─── Karte: Spindel-Tachometer ────────────────────────────────── -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card h-100">
+          <div class="card-header">
+            <i class="bi bi-arrow-repeat me-1"></i>
+            <span data-i18n="cardSpindle">SPINDEL</span> <span class="hl" data-i18n="unitRPM">U/MIN</span>
+          </div>
+          <div class="card-body d-flex flex-column align-items-center justify-content-center py-2">
+            <!-- Canvas: wird von drawTacho() in app.js gezeichnet -->
+            <canvas id="spindleTacho" class="tacho" width="240" height="140"></canvas>
+            <!-- Numerischer Wert unter dem Tachometer -->
+            <div id="spindleVal" class="val-xl text-accent mt-n3">0</div>
+            <div class="lbl">
+              <span data-i18n="unitRPM">U/MIN</span> &nbsp;/&nbsp;
+              <span data-i18n="max">max</span> 6000
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Karte: Aktives Werkzeug ───────────────────────────────────── -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card h-100">
+          <div class="card-header">
+            <i class="bi bi-tools me-1"></i>
+            <span data-i18n="cardActiveTool">AKTIVES WERKZEUG</span>
+          </div>
+          <div class="card-body">
+            <div class="row row-cols-2 g-2">
+
+              <div class="col">
+                <div class="lbl" data-i18n="lblToolNum">Werkzeug-Nr.</div>
+                <div id="toolNum" class="val-lg text-accent">—</div>
+              </div>
+              <div class="col">
+                <div class="lbl" data-i18n="lblStation">Station</div>
+                <div id="station" class="val-lg">—</div>
+              </div>
+              <div class="col">
+                <div class="lbl" data-i18n="lblSpindleNum">Spindel-Nr.</div>
+                <div id="spNum" class="val-lg">—</div>
+              </div>
+              <div class="col">
+                <div class="lbl" data-i18n="lblMaxPower">Max. Leistung</div>
+                <div id="maxPwr" class="val-lg text-warning">—</div>
+              </div>
+              <div class="col">
+                <div class="lbl" data-i18n="lblSpindleOvrd">Spindel-Override</div>
+                <div id="ssovrd" class="val-lg">—</div>
+              </div>
+              <div class="col">
+                <div class="lbl" data-i18n="lblFeedOvrd">Vorschub-Override</div>
+                <div id="fdovrd" class="val-lg">—</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Karte: Zykluszeit ─────────────────────────────────────────── -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card h-100">
+          <div class="card-header">
+            <i class="bi bi-stopwatch me-1"></i>
+            <span data-i18n="cardCycleTime">ZYKLUSZEIT</span>
+          </div>
+          <div class="card-body d-flex flex-column justify-content-around">
+
+            <!-- Große Digitaluhr-Anzeige -->
+            <div class="text-center">
+              <div id="cycleTimer">00:00</div>
+              <!-- cycleTimer: Styling in styles.css (Monospace, groß, grün) -->
+              <div class="d-flex justify-content-between lbl mt-1">
+                <span data-i18n="lblThisCycle">DIESER ZYKLUS</span>
+                <span id="cycleRaw">—</span>
+              </div>
+            </div>
+
+            <hr class="border-secondary"/>
+
+            <div>
+              <div class="lbl mb-1">
+                <i class="bi bi-clock-history me-1"></i>
+                <span data-i18n="lblSpindleTime">SPINDELLAUFZEIT</span>
+              </div>
+              <div id="spindleTimeDisp" class="val-lg text-accent">—</div>
+            </div>
+
+            <hr class="border-secondary"/>
+
+            <div>
+              <div class="lbl mb-1">
+                <i class="bi bi-cpu me-1"></i>
+                <span data-i18n="lblMachineRuntime">MASCHINENLAUFZEIT</span>
+              </div>
+              <div id="machRT" class="val-sm text-warning mono">—</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Karte: NC-Programm und G-Codes ───────────────────────────── -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card h-100">
+          <div class="card-header">
+            <i class="bi bi-file-code me-1"></i>
+            <span data-i18n="cardProgram">PROGRAMM</span> <span class="hl">&amp; G-CODES</span>
+          </div>
+          <div class="card-body">
+            <div class="lbl" data-i18n="lblActiveProgram">AKTIVES PROGRAMM</div>
+            <div id="progName" class="mono text-accent2 mb-1"
+                 style="font-size:.9rem; word-break:break-all;">—</div>
+            <div class="lbl mb-2">
+              <span data-i18n="lblM30">M30-Zähler:</span>
+              <span id="m30c" class="text-white">—</span>
+            </div>
+            <hr class="border-secondary"/>
+            <div class="lbl mb-1" data-i18n="lblActiveGcodes">AKTIVE G-CODES</div>
+            <div id="gcodesWrap">—</div>
+            <!-- gcodesWrap: app.js füllt diesen Bereich mit gcode-chip Spans -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Tabelle: Achspositionen ───────────────────────────────────── -->
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <i class="bi bi-arrows-move me-1"></i>
+            <span data-i18n="cardAxisPos">ACHSEN POSITIONEN</span>
+          </div>
+          <div class="card-body p-0">
+            <!-- p-0: Kein Innenabstand damit die Tabelle randlos wirkt -->
+            <div class="table-responsive">
+              <table class="table table-dark table-sm table-hover axis-tbl mb-0"
+                     style="--bs-table-bg:transparent; --bs-table-border-color:var(--bs-border-color);">
+                <thead>
+                  <tr>
+                    <th class="lbl" data-i18n="thAxis">ACHSE</th>
+                    <th class="lbl" data-i18n="thPosition">POSITION (mm)</th>
+                    <th class="lbl" data-i18n="thMaxSpeed">MAX. GESCHW.</th>
+                    <th class="lbl" data-i18n="thLimit">LIMIT (–)</th>
+                    <th class="lbl" data-i18n="thStatus">STATUS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="axis-name">X</td>
+                    <td class="axis-val" id="xPos">—</td>
+                    <td class="text-accent2 mono">169,3 mm/s</td>
+                    <td class="text-secondary mono">-762,0 mm</td>
+                    <td><span class="badge bg-success bg-opacity-25 text-success border border-success"
+                              style="font-size:.65rem;" data-i18n="badgeEnabled">AKTIV</span></td>
+                  </tr>
+                  <tr>
+                    <td class="axis-name">Y</td>
+                    <td class="axis-val" id="yPos">—</td>
+                    <td class="text-accent2 mono">169,3 mm/s</td>
+                    <td class="text-secondary mono">-305,0 mm</td>
+                    <td><span class="badge bg-success bg-opacity-25 text-success border border-success"
+                              style="font-size:.65rem;" data-i18n="badgeEnabled">AKTIV</span></td>
+                  </tr>
+                  <tr>
+                    <td class="axis-name">Z</td>
+                    <td class="axis-val" id="zPos">—</td>
+                    <td class="text-secondary mono">—</td>
+                    <td class="text-secondary mono">—</td>
+                    <td><span class="badge bg-secondary bg-opacity-25 text-secondary border border-secondary"
+                              style="font-size:.65rem;">—</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row Übersicht -->
+  </div><!-- /tab-overview -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- TAB 2 — ACHSLEISTUNG                                                -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+  <div class="tab-pane fade" id="tab-axes" role="tabpanel">
+    <div class="row g-3">
+
+      <!-- X-Achsen-Tachometer -->
+      <div class="col-12 col-md-4">
+        <div class="card h-100">
+          <div class="card-header">
+            <i class="bi bi-arrow-left-right me-1"></i>
+            <span data-i18n="axisX">X-ACHSE</span> <span class="hl" data-i18n="lblVelocity">GESCHWINDIGKEIT</span>
+          </div>
+          <div class="card-body d-flex flex-column align-items-center justify-content-center">
+            <canvas id="tachoX" class="tacho" width="240" height="140"></canvas>
+            <div id="velXVal" class="val-xl text-accent mt-n3">0.0</div>
+            <div class="lbl">mm/s &nbsp;/&nbsp; <span data-i18n="max">max</span> 169,3</div>
+            <!-- Fortschrittsbalken: zeigt Prozent der Maximalgeschwindigkeit -->
+            <div class="progress w-100 mt-3" style="height:4px; background:#1a2535;">
+              <div id="barX" class="progress-bar bg-info" style="width:0%; transition:width .5s;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Y-Achsen-Tachometer -->
+      <div class="col-12 col-md-4">
+        <div class="card h-100">
+          <div class="card-header">
+            <i class="bi bi-arrow-up-down me-1"></i>
+            <span data-i18n="axisY">Y-ACHSE</span> <span class="hl" data-i18n="lblVelocity">GESCHWINDIGKEIT</span>
+          </div>
+          <div class="card-body d-flex flex-column align-items-center justify-content-center">
+            <canvas id="tachoY" class="tacho" width="240" height="140"></canvas>
+            <div id="velYVal" class="val-xl text-accent2 mt-n3">0.0</div>
+            <div class="lbl">mm/s &nbsp;/&nbsp; <span data-i18n="max">max</span> 169,3</div>
+            <div class="progress w-100 mt-3" style="height:4px; background:#1a2535;">
+              <div id="barY" class="progress-bar bg-success" style="width:0%; transition:width .5s;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spindel-Tachometer -->
+      <div class="col-12 col-md-4">
+        <div class="card h-100">
+          <div class="card-header">
+            <i class="bi bi-arrow-repeat me-1"></i>
+            <span data-i18n="cardSpindle">SPINDEL</span> <span class="hl" data-i18n="unitRPM">U/MIN</span>
+          </div>
+          <div class="card-body d-flex flex-column align-items-center justify-content-center">
+            <canvas id="tachoS" class="tacho" width="240" height="140"></canvas>
+            <div id="velSVal" class="val-xl text-accent mt-n3">0</div>
+            <div class="lbl"><span data-i18n="unitRPM">U/MIN</span> &nbsp;/&nbsp; <span data-i18n="max">max</span> 6000</div>
+            <div class="progress w-100 mt-3" style="height:4px; background:#1a2535;">
+              <div id="barS" class="progress-bar bg-info" style="width:0%; transition:width .5s;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Maschinenparameter-Raster -->
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <i class="bi bi-sliders me-1"></i>
+            <span data-i18n="cardMachineParams">MASCHINENPARAMETER</span>
+          </div>
+          <div class="card-body">
+            <div class="row row-cols-2 row-cols-md-4 g-3">
+              <!-- Feste Werte aus der Maschinenspezifikation -->
+              <div class="col">
+                <div class="lbl" data-i18n="lblMaxFeed">Max. Vorschubrate</div>
+                <div class="val-lg text-accent">10160 <small class="lbl">mm/min</small></div>
+              </div>
+              <div class="col">
+                <div class="lbl" data-i18n="lblMaxAccel">Max. Beschleunigung</div>
+                <div class="val-lg">549,3 <small class="lbl">mm/s²</small></div>
+              </div>
+              <div class="col">
+                <div class="lbl" data-i18n="lblContourAccel">Max. Kontur-Beschl.</div>
+                <div class="val-lg">366,2 <small class="lbl">mm</small></div>
+              </div>
+              <div class="col">
+                <div class="lbl" data-i18n="lblTimeConst">Zeitkonstante</div>
+                <div class="val-lg">3,0 <small class="lbl">s</small></div>
+              </div>
+              <div class="col">
+                <div class="lbl" data-i18n="lblCornerRound">Eckenrundung</div>
+                <div class="val-lg">0,635 <small class="lbl">mm</small></div>
+              </div>
+              <!-- Dynamische Werte von renderUI() -->
+              <div class="col">
+                <div class="lbl" data-i18n="lblRapidOvrd">Eilgang-Override</div>
+                <div id="rovrd2" class="val-lg text-accent2">—</div>
+              </div>
+              <div class="col">
+                <div class="lbl" data-i18n="lblFeedOvrd">Vorschub-Override</div>
+                <div id="fdovrd2" class="val-lg">—</div>
+              </div>
+              <div class="col">
+                <div class="lbl" data-i18n="lblMachineRuntime">Maschinenlaufzeit</div>
+                <div id="machRT2" class="val-lg text-warning">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row Achsleistung -->
+  </div><!-- /tab-axes -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- TAB 3 — TRAJEKTORIE                                                 -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+  <div class="tab-pane fade" id="tab-trajectory" role="tabpanel">
+
+    <!-- Informationshinweis -->
+    <div class="alert alert-secondary border-secondary d-flex align-items-center gap-2 py-2 mb-3 lbl">
+      <i class="bi bi-info-circle-fill"></i>
+      <span data-i18n="trajectoryHint">
+        Werkzeugbahn aus Positionsverlauf &nbsp;·&nbsp; Grüner Punkt = aktuelle Position
+      </span>
+    </div>
+
+    <div class="row g-3">
+
+      <!-- XY-Ansicht (Draufsicht) -->
+      <div class="col-12 col-md-4">
+        <div class="card">
+          <div class="card-header">
+            <i class="bi bi-bounding-box me-1"></i>X–Y
+            <small class="text-secondary" data-i18n="viewTop">(DRAUFSICHT)</small>
+          </div>
+          <div class="card-body p-2">
+            <!-- Canvas: drawTrajectory() in app.js zeichnet die Bahnkurve -->
+            <canvas id="viewXY" class="traj"></canvas>
+            <div class="d-flex justify-content-between lbl mt-2">
+              <span>X: <span id="xyX" class="text-accent mono">—</span></span>
+              <span>Y: <span id="xyY" class="text-accent mono">—</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- XZ-Ansicht (Frontansicht) -->
+      <div class="col-12 col-md-4">
+        <div class="card">
+          <div class="card-header">
+            <i class="bi bi-bounding-box me-1"></i>X–Z
+            <small class="text-secondary" data-i18n="viewFront">(FRONTANSICHT)</small>
+          </div>
+          <div class="card-body p-2">
+            <canvas id="viewXZ" class="traj"></canvas>
+            <div class="d-flex justify-content-between lbl mt-2">
+              <span>X: <span id="xzX" class="text-accent mono">—</span></span>
+              <span>Z: <span id="xzZ" class="text-accent mono">—</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- YZ-Ansicht (Seitenansicht) -->
+      <div class="col-12 col-md-4">
+        <div class="card">
+          <div class="card-header">
+            <i class="bi bi-bounding-box me-1"></i>Y–Z
+            <small class="text-secondary" data-i18n="viewSide">(SEITENANSICHT)</small>
+          </div>
+          <div class="card-body p-2">
+            <canvas id="viewYZ" class="traj"></canvas>
+            <div class="d-flex justify-content-between lbl mt-2">
+              <span>Y: <span id="yzY" class="text-accent mono">—</span></span>
+              <span>Z: <span id="yzZ" class="text-accent mono">—</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row Trajektorie -->
+  </div><!-- /tab-trajectory -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- TAB 4 — STROMSENSOR                                                 -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+  <div class="tab-pane fade" id="tab-sensor" role="tabpanel">
+
+    <!-- Warnhinweis: Sensor noch nicht verbunden -->
+    <div class="alert alert-warning border-warning d-flex align-items-center gap-2 py-2 mb-3"
+         style="font-size:.78rem;">
+      <i class="bi bi-lightning-charge-fill"></i>
+      <span data-i18n="sensorNotConnected">
+        SENSORDATEN NOCH NICHT VERBUNDEN &nbsp;|&nbsp; INTERFACE VORBEREITET
+      </span>
+    </div>
+
+    <div class="row g-3">
+
+      <!-- Spindel-Stromkanal -->
+      <div class="col-12 col-md-4">
+        <div class="card sensor-card h-100" id="ch-spindle">
+          <!-- sensor-card: gestrichelter Rand = offline; Klasse "live" = grün -->
+          <div class="card-header">
+            <i class="bi bi-arrow-repeat me-1"></i>
+            <span data-i18n="sensorSpindleCh">SPINDELSTROM</span>
+          </div>
+          <div class="card-body">
+            <div class="ch-val" id="sensorSpindle">—.—</div>
+            <div class="lbl" data-i18n="unitAmpere">AMPERE (A)</div>
+            <!-- Sparkline-Canvas: drawMiniChart() in app.js zeichnet den Verlauf -->
+            <canvas class="sparkline mt-2" id="chartSpindle"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- X-Achsen-Stromkanal -->
+      <div class="col-12 col-md-4">
+        <div class="card sensor-card h-100" id="ch-x">
+          <div class="card-header">
+            <i class="bi bi-arrow-left-right me-1"></i>
+            <span data-i18n="sensorXCh">X-ACHSEN-STROM</span>
+          </div>
+          <div class="card-body">
+            <div class="ch-val" id="sensorX">—.—</div>
+            <div class="lbl" data-i18n="unitAmpere">AMPERE (A)</div>
+            <canvas class="sparkline mt-2" id="chartX"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Y-Achsen-Stromkanal -->
+      <div class="col-12 col-md-4">
+        <div class="card sensor-card h-100" id="ch-y">
+          <div class="card-header">
+            <i class="bi bi-arrow-up-down me-1"></i>
+            <span data-i18n="sensorYCh">Y-ACHSEN-STROM</span>
+          </div>
+          <div class="card-body">
+            <div class="ch-val" id="sensorY">—.—</div>
+            <div class="lbl" data-i18n="unitAmpere">AMPERE (A)</div>
+            <canvas class="sparkline mt-2" id="chartY"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Berechnete Kennwerte -->
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <i class="bi bi-calculator me-1"></i>
+            <span data-i18n="cardComputedMetrics">BERECHNETE KENNWERTE</span>
+            <span class="hl" data-i18n="metricsHint">(nach Sensorverbindung aktiv)</span>
+          </div>
+          <div class="card-body">
+            <div class="row row-cols-2 row-cols-md-4 g-3">
+              <!-- Alle vier Werte werden von updateSensorUI() in app.js befüllt -->
+              <div class="col">
+                <div class="lbl" data-i18n="lblPowerEst">Leistungsschätzung</div>
+                <div id="derPower" class="val-lg text-secondary">— W</div>
+              </div>
+              <div class="col">
+                <div class="lbl" data-i18n="lblRMS">Effektivwert (RMS)</div>
+                <div id="derRMS" class="val-lg text-secondary">— A</div>
+              </div>
+              <div class="col">
+                <div class="lbl" data-i18n="lblPeak">Spitzenstrom</div>
+                <div id="derPeak" class="val-lg text-secondary">— A</div>
+              </div>
+              <div class="col">
+                <div class="lbl" data-i18n="lblLoad">Auslastung</div>
+                <div id="derLoad" class="val-lg text-secondary">— %</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Integrations-Anleitung -->
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <i class="bi bi-code-slash me-1"></i>
+            <span data-i18n="cardIntegration">INTEGRATIONSANLEITUNG</span>
+          </div>
+          <div class="card-body">
+            <!-- Syntaxhervorgehobener Code-Block (kein Sprachschalter nötig — Code ist sprachneutral) -->
+            <div class="code-block">
+              <span style="color:#3a4a5c;">// 1. <span data-i18n="codeComment1">Sensor-URL im ⚙ Modal eingeben oder in app.js setzen:</span></span><br>
+              <span style="color:#0dcaf0;">let</span>
+              <span style="color:#c8dce8;">SENSOR_ENDPOINT</span> =
+              <span style="color:#20c997;">'http://192.168.1.101:7878/current'</span>;<br><br>
+
+              <span style="color:#3a4a5c;">// 2. <span data-i18n="codeComment2">Erwartetes JSON-Format:</span></span><br>
+              <span style="color:#c8dce8;">{</span><br>
+              &nbsp;&nbsp;<span style="color:#20c997;">"spindle_A"</span>: <span style="color:#fd7e14;">12.4</span>,<br>
+              &nbsp;&nbsp;<span style="color:#20c997;">"x_axis_A"</span>:  <span style="color:#fd7e14;">3.1</span>,<br>
+              &nbsp;&nbsp;<span style="color:#20c997;">"y_axis_A"</span>:  <span style="color:#fd7e14;">2.7</span>,<br>
+              &nbsp;&nbsp;<span style="color:#20c997;">"timestamp"</span>: <span style="color:#20c997;">"ISO8601"</span><br>
+              <span style="color:#c8dce8;">}</span><br><br>
+              <span style="color:#3a4a5c;">// 3. <span data-i18n="codeComment3">Dashboard fragt automatisch jede Sekunde ab.</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row Sensor -->
+  </div><!-- /tab-sensor -->
+
+</div><!-- /tab-content -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!--  FUSSZEILE                                                               -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+<footer class="d-flex align-items-center justify-content-between px-3 py-2">
+
+  <!-- Verbindungs-URL (wird von testConnection() in app.js aktualisiert) -->
+  <span>
+    MTConnect &nbsp;·&nbsp;
+    <span id="ipDisplay" class="text-accent mono" data-i18n="footerNotConfigured">NICHT KONFIGURIERT</span>
+  </span>
+
+  <!-- Aktualisierungsindikator -->
+  <span class="d-flex align-items-center gap-2">
+    <span class="refresh-dot"></span>
+    <!-- refresh-dot: pulsierender grüner Punkt aus styles.css -->
+    <span data-i18n="footerRefresh">AKTUALISIERUNG ALLE 1 s</span>
+  </span>
+
+  <!-- Zeitstempel der letzten Aktualisierung -->
+  <span id="lastUpdate" data-i18n="footerLastUpdate">Letzte Aktualisierung: —</span>
+
+</footer>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!--  SKRIPTE                                                                 -->
+<!--  Reihenfolge wichtig: Bootstrap → i18n → app.js                         -->
+<!--  Bootstrap muss zuerst geladen werden (definiert bootstrap-Objekt)       -->
+<!--  i18n.js muss vor app.js geladen werden (definiert setLanguage())        -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+<!-- Bootstrap 5 JavaScript: enthält Popper.js für Modals, Tooltips usw. -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Übersetzungsdatei: definiert das i18n-Dictionary und setLanguage() -->
+<script src="../js/js_i18n.js"></script>
+
+<!-- Hauptanwendungslogik: Datenabruf, Parsing, Canvas-Zeichnung, UI-Rendering -->
+<script src="../js/app.js"></script>
+
+</body>
+</html>
