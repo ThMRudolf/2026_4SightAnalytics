@@ -670,6 +670,156 @@
     transform: none;
   }
 
+  /* TOOL RENTAL */
+  #tool-rental {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rental-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+  }
+
+  .rental-card {
+    background: var(--bg);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  .rental-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--accent2);
+    transition: width 0.4s ease;
+  }
+  .rental-card:hover::after { width: 100%; }
+  .rental-card:hover { background: var(--surface); }
+
+  .rental-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .rental-icon { font-size: 2rem; }
+
+  .rental-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+  }
+  .rental-badge.available {
+    color: var(--accent);
+    border: 1px solid rgba(0,212,170,0.3);
+    background: rgba(0,212,170,0.08);
+  }
+  .rental-badge.limited {
+    color: var(--accent2);
+    border: 1px solid rgba(255,107,53,0.3);
+    background: rgba(255,107,53,0.08);
+  }
+  .rental-badge.request {
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .rental-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 0.05em;
+    color: var(--text);
+  }
+
+  .rental-desc {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.6;
+    font-weight: 300;
+    flex: 1;
+  }
+
+  .rental-spec {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--accent2);
+    letter-spacing: 0.06em;
+  }
+
+  .rental-pricing {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .price-item { display: flex; flex-direction: column; gap: 0.2rem; }
+
+  .price-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .price-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    color: var(--text);
+    letter-spacing: 0.04em;
+  }
+
+  .btn-rent {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    transition: all 0.25s;
+  }
+  .btn-rent:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    background: rgba(255,107,53,0.08);
+  }
+
+  .rental-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 2rem 2.5rem;
+    border: 1px solid var(--border);
+  }
+
+  .rental-cta-text {
+    font-size: 1.05rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
   /* MOBILE */
   @media (max-width: 900px) {
     nav { padding: 1rem 1.5rem; }
@@ -682,6 +832,8 @@
     .industries-layout, .contact-layout { grid-template-columns: 1fr; gap: 3rem; }
     #process .process-steps { grid-template-columns: 1fr 1fr; gap: 2rem; }
     #process .process-steps::before { display: none; }
+    .rental-grid { grid-template-columns: repeat(2, 1fr); }
+    .rental-cta { flex-direction: column; text-align: center; }
     footer { flex-direction: column; gap: 1.5rem; text-align: center; }
     .form-row { grid-template-columns: 1fr; }
   }
