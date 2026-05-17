@@ -1,63 +1,34 @@
-name: Deploy to Hostinger via SCP
+name: Deploy to Hostinger
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
-      
-      - name: Display repository structure
-        run: |
-          echo "📁 Repository structure:"
-          ls -la
-          echo ""
-          echo "📦 Files to deploy:"
-          find . -type f ! -path './.git/*' ! -path './.github/*' | head -20
-      
-      - name: Deploy files via SCP
-        uses: appleboy/scp-action@master
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          port: 22
-          source: "./"
-          target: ${{ secrets.REMOTE_PATH }}
-          rm: true
-          overwrite: true
-          debug: true
-      
-      - name: Deployment Success
-        if: success()
-        run: |
-          echo "✅ Deployment successful!"
-          echo "🌐 Website: https://yourdomain.com"
-          echo "📍 Deployed to: ${{ secrets.REMOTE_PATH }}"
-      
-      - name: Deployment Failed
-        if: failure()
-        run: |
-          echo "❌ Deployment failed!"
-          echo "🔍 Check the logs above for details"
-          echo ""
-          echo "Common issues:"
-          echo "1. SSH_HOST not correct (try: ssh.yourdomain.com or ftp.yourdomain.com)"
-          echo "2. SSH_USER not correct (check Hostinger account username)"
-          echo "3. SSH_PASSWORD incorrect or expired"
-          echo "4. REMOTE_PATH doesn't exist (should be /home/username/public_html/)"
-          echo ""
-          echo "📚 Debug guide: Check 'Deploy files via SCP' logs with debug: true enabled"
-          exit 1
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/
+          server-dir: /public_html/

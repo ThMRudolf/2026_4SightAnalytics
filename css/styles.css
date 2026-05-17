@@ -737,6 +737,11 @@
     color: var(--muted);
     border: 1px solid var(--border);
   }
+  .rental-badge.unavailable {
+    color: #e05555;
+    border: 1px solid rgba(224,85,85,0.3);
+    background: rgba(224,85,85,0.08);
+  }
 
   .rental-title {
     font-family: 'Bebas Neue', sans-serif;
