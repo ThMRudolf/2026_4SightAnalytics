@@ -1,0 +1,24 @@
+name: Deploy to Hostinger
+
+on:
+  push:
+    branches:
+      - main  # Change to your default branch if different
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Deploy via SFTP
+        uses: pressley/github-action-push-to-ftp@v3
+        with:
+          host: ${{ secrets.FTP_SERVER }}
+          user: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local_dir: ./
+          remote_dir: ${{ secrets.FTP_REMOTE_PATH }}
+          delete: true  # Delete files on server not in repo
