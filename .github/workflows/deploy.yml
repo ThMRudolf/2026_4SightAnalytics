@@ -6,6 +6,9 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -13,6 +16,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Display repository structure
+        run: |
+          echo "📁 Repository structure:"
+          ls -la
+          echo ""
+          echo "📦 Files to deploy:"
+          find . -type f ! -path './.git/*' ! -path './.github/*' | head -20
       
       - name: Deploy files via SCP
         uses: appleboy/scp-action@master
@@ -20,14 +33,31 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
           source: "./"
           target: ${{ secrets.REMOTE_PATH }}
-          rm: true  # Delete files not in repo
+          rm: true
+          overwrite: true
+          debug: true
       
       - name: Deployment Success
         if: success()
-        run: echo "✅ Website deployed to Hostinger successfully!"
+        run: |
+          echo "✅ Deployment successful!"
+          echo "🌐 Website: https://yourdomain.com"
+          echo "📍 Deployed to: ${{ secrets.REMOTE_PATH }}"
       
       - name: Deployment Failed
         if: failure()
-        run: echo "❌ Deployment failed. Check secrets and path."
+        run: |
+          echo "❌ Deployment failed!"
+          echo "🔍 Check the logs above for details"
+          echo ""
+          echo "Common issues:"
+          echo "1. SSH_HOST not correct (try: ssh.yourdomain.com or ftp.yourdomain.com)"
+          echo "2. SSH_USER not correct (check Hostinger account username)"
+          echo "3. SSH_PASSWORD incorrect or expired"
+          echo "4. REMOTE_PATH doesn't exist (should be /home/username/public_html/)"
+          echo ""
+          echo "📚 Debug guide: Check 'Deploy files via SCP' logs with debug: true enabled"
+          exit 1
