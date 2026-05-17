@@ -1,9 +1,10 @@
-name: Deploy to Hostinger
+name: Deploy to Hostinger via SCP
 
 on:
   push:
     branches:
-      - main  # Change to your default branch if different
+      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -11,14 +12,22 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
-      - name: Deploy via SFTP
-        uses: pressley/github-action-push-to-ftp@v3
+      - name: Deploy files via SCP
+        uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.FTP_SERVER }}
-          user: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local_dir: ./
-          remote_dir: ${{ secrets.FTP_REMOTE_PATH }}
-          delete: true  # Delete files on server not in repo
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: "./"
+          target: ${{ secrets.REMOTE_PATH }}
+          rm: true  # Delete files not in repo
+      
+      - name: Deployment Success
+        if: success()
+        run: echo "✅ Website deployed to Hostinger successfully!"
+      
+      - name: Deployment Failed
+        if: failure()
+        run: echo "❌ Deployment failed. Check secrets and path."
