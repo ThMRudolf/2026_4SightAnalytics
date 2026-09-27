@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4SightAnalytics | Tool Rental</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<!-- Tool rental section, removed from index.html and kept here for later reuse.
+     To re-integrate: copy the <section id="tool-rental"> block into index.html,
+     add the nav link, the "Tool Rental" form option and the rental.* translation keys. -->
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="logo" style="text-decoration:none;">4SIGHT<span>Analytics</span></a>
+  <ul>
+    <li><a href="#tool-rental" data-i18n="nav.rental">Tool Rental</a></li>
+    <li><a href="index.html#contact" data-i18n="nav.contact">Contact</a></li>
+  </ul>
+  <div class="lang-switcher">
+    <button class="lang-btn active" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" onclick="setLang('de')">DE</button>
+    <button class="lang-btn" onclick="setLang('es')">ES</button>
+  </div>
+</nav>
+
+<!-- TOOL RENTAL -->
+<section id="tool-rental">
+  <div class="section-tag" data-i18n="rental.tag">// Construction Equipment</div>
+  <h2 data-i18n-html="rental.h2">TOOL <span>RENTAL</span></h2>
+  <p class="section-intro reveal" data-i18n="rental.intro">Professional-grade construction equipment available for daily or weekly hire — delivered to your site, serviced and ready to work.</p>
+
+  <div class="rental-grid">
+
+    <div class="rental-card reveal">
+      <div class="rental-card-header">
+        <span class="rental-icon">📡</span>
+        <span class="rental-badge available" data-i18n="rental.available">Available</span>
+      </div>
+      <div class="rental-title" data-i18n="rental.t1.name">Bosch D-TECT 120 Professional</div>
+      <p class="rental-desc" data-i18n="rental.t1.desc">Professional universal wall/floor/ceiling scanner using microwave radar technology. Detects live cables, metal pipes, plastic pipes, wood studs, and cavities behind walls — without drilling.</p>
+      <span class="rental-spec" data-i18n="rental.t1.spec">120mm Metal · 80mm Live Cables · 60mm Plastic · IP 54</span>
+      <div class="rental-pricing">
+        <div class="price-item">
+          <span class="price-label" data-i18n="rental.day">Per Day</span>
+          <span class="price-val">150 MXN</span>
+        </div>
+        <div class="price-item">
+          <span class="price-label" data-i18n="rental.week">Per Week</span>
+          <span class="price-val">1,600 MXN</span>
+        </div>
+      </div>
+      <a href="index.html#contact" class="btn-rent" data-i18n="rental.book">Book Now</a>
+    </div>
+
+    <div class="rental-card reveal">
+      <div class="rental-card-header">
+        <span class="rental-icon">🔧</span>
+        <span class="rental-badge unavailable" data-i18n="rental.unavailable">Not Available</span>
+      </div>
+      <div class="rental-title" data-i18n="rental.t2.name">TRIUMPH 1500W 4-in-1 Welding Machine</div>
+      <p class="rental-desc" data-i18n="rental.t2.desc">Versatile 4-in-1 welding machine combining MMA, MIG, TIG, and plasma cutting functions. 1500W power output with digital display and professional-grade duty cycle — suitable for steel, stainless, and aluminum.</p>
+      <span class="rental-spec" data-i18n="rental.t2.spec">1500W · MMA / MIG / TIG / Plasma · 220V</span>
+      <div class="rental-pricing">
+        <div class="price-item">
+          <span class="price-label" data-i18n="rental.day">Per Day</span>
+          <span class="price-val">5000 MXN</span>
+        </div>
+        <div class="price-item">
+          <span class="price-label" data-i18n="rental.week">Per Week</span>
+          <span class="price-val">12,000 MXN</span>
+        </div>
+      </div>
+      <a href="index.html#contact" class="btn-rent" style="opacity:0.45;pointer-events:none;cursor:not-allowed;" data-i18n="rental.unavailable_btn">Currently Unavailable</a>
+    </div>
+    <div class="rental-card reveal">
+      <div class="rental-card-header">
+        <span class="rental-icon">🔧</span>
+        <span class="rental-badge unavailable" data-i18n="rental.unavailable">Not Available</span>
+      </div>
+      <div class="rental-title" data-i18n="rental.t2.name">Lincoln Electric - Soldador 90i FC Flux con alambre de núcleo Weld-PAK</div>
+      <p class="rental-desc" data-i18n="rental.t2.desc">máquina de soldadura de 120 V / portátil con correa / carcasa protectora de metal</p>
+      <p class="rental-spec" data-i18n="rental.t2.spec"> trabajos pequeños / K5255-1 </p>
+      <div class="rental-pricing">
+        <div class="price-item">
+          <span class="price-label" data-i18n="rental.day">Per Day</span>
+          <span class="price-val">150 MXN</span>
+        </div>
+        <div class="price-item">
+          <span class="price-label" data-i18n="rental.week">Per Week</span>
+          <span class="price-val">1,600 MXN</span>
+        </div>
+      </div>
+      <a href="index.html#contact" class="btn-rent" style="opacity:0.45;pointer-events:none;cursor:not-allowed;" data-i18n="rental.unavailable_btn">Currently Unavailable</a>
+    </div>
+    <div class="rental-card reveal">
+      <div class="rental-card-header">
+        <span class="rental-icon">🔧</span>
+        <span class="rental-badge unavailable" data-i18n="rental.unavailable">Not Available</span>
+      </div>
+      <div class="rental-title" data-i18n="rental.t2.name">Drone Dji Matrice 4t Cámara</div>
+      <p class="rental-desc" data-i18n="rental.t2.desc">Matrice 4T es adecuado para una amplia gama de aplicaciones, como el sector eléctrico, los sistemas de respuesta en caso de emergencia, la seguridad pública y la conservación forestal.</p>
+      <span class="rental-spec" data-i18n="rental.t2.spec">Resolución máxima de la cámara: 4K: 3840 × 2160 a 30 fps / Frecuencia de funcionamiento del Wi-Fi: 2.4 GHz / Detección de vehículos y embarcaciones durante operaciones de búsqueda y rescate.</span>
+      <div class="rental-pricing">
+        <div class="price-item">
+          <span class="price-label" data-i18n="rental.day">Per Day</span>
+          <span class="price-val">8,000 MXN</span>
+        </div>
+        <div class="price-item">
+          <span class="price-label" data-i18n="rental.week">Per Week</span>
+          <span class="price-val">30,000 MXN</span>
+        </div>
+      </div>
+      <a href="index.html#contact" class="btn-rent" style="opacity:0.45;pointer-events:none;cursor:not-allowed;" data-i18n="rental.unavailable_btn">Currently Unavailable</a>
+    </div>
+
+  </div>
+
+  <div class="rental-cta reveal">
+    <p class="rental-cta-text" data-i18n="rental.cta_text">Need a custom package or long-term hire?</p>
+    <a href="index.html#contact" class="btn-primary" data-i18n="rental.cta_btn">Request a Quote</a>
+  </div>
+</section>
+
+<script>
+// ---- I18N DATA ----
+const translations = {
+  en: {
+    "nav.rental": "Tool Rental",
+    "nav.contact": "Contact",
+    "rental.tag": "// Construction Equipment",
+    "rental.h2": "TOOL <span>RENTAL</span>",
+    "rental.intro": "Professional-grade construction equipment available for daily or weekly hire — delivered to your site, serviced and ready to work.",
+    "rental.available": "Available",
+    "rental.limited": "Limited Stock",
+    "rental.request": "On Request",
+    "rental.day": "Per Day",
+    "rental.week": "Per Week",
+    "rental.book": "Book Now",
+    "rental.cta_text": "Need a custom package or long-term hire?",
+    "rental.cta_btn": "Request a Quote",
+    "rental.t1.name": "Bosch D-TECT 120 Professional",
+    "rental.t1.desc": "Professional universal wall/floor/ceiling scanner using microwave radar technology. Detects live cables, metal pipes, plastic pipes, wood studs, and cavities behind walls — without drilling.",
+    "rental.t1.spec": "120mm Metal · 80mm Live Cables · 60mm Plastic · IP 54",
+    "rental.unavailable": "Not Available",
+    "rental.unavailable_btn": "Currently Unavailable",
+    "rental.t2.name": "TRIUMPH 1500W 4-in-1 Welding Machine",
+    "rental.t2.desc": "Versatile 4-in-1 welding machine combining MMA, MIG, TIG, and plasma cutting functions. 1500W power output with digital display and professional-grade duty cycle — suitable for steel, stainless, and aluminum.",
+    "rental.t2.spec": "1500W · MMA / MIG / TIG / Plasma · 220V",
+  },
+  de: {
+    "nav.rental": "Gerätemietung",
+    "nav.contact": "Kontakt",
+    "rental.tag": "// Baumaschinen",
+    "rental.h2": "GERÄTE <span>MIETUNG</span>",
+    "rental.intro": "Professionelle Baumaschinen zur tages- oder wochenweisen Miete — geliefert auf Ihre Baustelle, gewartet und einsatzbereit.",
+    "rental.available": "Verfügbar",
+    "rental.limited": "Begrenzt",
+    "rental.request": "Auf Anfrage",
+    "rental.day": "Pro Tag",
+    "rental.week": "Pro Woche",
+    "rental.book": "Jetzt buchen",
+    "rental.cta_text": "Individuelles Paket oder Langzeitmiete gewünscht?",
+    "rental.cta_btn": "Angebot anfragen",
+    "rental.t1.name": "Bosch D-TECT 120 Professional",
+    "rental.t1.desc": "Professioneller Universal-Wandscanner mit Mikrowellen-Radartechnologie. Erkennt spannungsführende Leitungen, Metallrohre, Kunststoffrohre, Holzbalken und Hohlräume hinter Wänden — ohne Bohren.",
+    "rental.t1.spec": "120mm Metall · 80mm Stromleitungen · 60mm Kunststoff · IP 54",
+    "rental.unavailable": "Nicht verfügbar",
+    "rental.unavailable_btn": "Derzeit nicht verfügbar",
+    "rental.t2.name": "TRIUMPH 1500W 4-in-1 Schweißgerät",
+    "rental.t2.desc": "Vielseitiges 4-in-1 Schweißgerät mit MMA-, MIG-, TIG- und Plasmaschneidfunktion. 1500W Leistung mit Digitalanzeige und professionellem Einschaltdauer — geeignet für Stahl, Edelstahl und Aluminium.",
+    "rental.t2.spec": "1500W · MMA / MIG / TIG / Plasma · 220V",
+  },
+  es: {
+    "nav.rental": "Alquiler",
+    "nav.contact": "Contacto",
+    "rental.tag": "// Maquinaria de Construcción",
+    "rental.h2": "ALQUILER DE <span>EQUIPOS</span>",
+    "rental.intro": "Maquinaria de construcción profesional disponible para alquiler diario o semanal — entregada en obra, revisada y lista para trabajar.",
+    "rental.available": "Disponible",
+    "rental.limited": "Stock Limitado",
+    "rental.request": "Bajo Pedido",
+    "rental.day": "Por Día",
+    "rental.week": "Por Semana",
+    "rental.book": "Reservar",
+    "rental.cta_text": "¿Necesita un paquete personalizado o alquiler a largo plazo?",
+    "rental.cta_btn": "Solicitar Presupuesto",
+    "rental.t1.name": "Bosch D-TECT 120 Professional",
+    "rental.t1.desc": "Escáner universal profesional para paredes, suelos y techos con tecnología de radar de microondas. Detecta cables con tensión, tuberías metálicas, tuberías de plástico, vigas de madera y cavidades — sin perforar.",
+    "rental.t1.spec": "120mm Metal · 80mm Cables · 60mm Plástico · IP 54",
+    "rental.unavailable": "No Disponible",
+    "rental.unavailable_btn": "Actualmente no disponible",
+    "rental.t2.name": "TRIUMPH 1500 vatios 4 en 1 Máquina de Soldadura",
+    "rental.t2.desc": "Versátil máquina de soldadura 4 en 1 con funciones MMA, MIG, TIG y corte por plasma. 1500W de potencia con pantalla digital y ciclo de trabajo profesional — apta para acero, inoxidable y aluminio.",
+    "rental.t2.spec": "1500W · MMA / MIG / TIG / Plasma · 220V",
+  }
+};
+
+function setLang(lang) {
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase() === lang);
+  });
+  const t = translations[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key]) el.textContent = t[key];
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.getAttribute('data-i18n-html');
+    if (t[key]) el.innerHTML = t[key];
+  });
+}
+
+// ---- SCROLL REVEAL ----
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
