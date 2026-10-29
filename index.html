@@ -228,7 +228,7 @@
         </div>
         <div class="contact-info-item">
           <span class="info-label" data-i18n="contact.phone_label">Phone</span>
-          <span class="info-val">+52 55 1234 5678</span>
+          <span class="info-val">+52 55 3082 8804</span>
         </div>
         <div class="contact-info-item">
           <span class="info-label" data-i18n="contact.hq_label">Headquarters</span>
@@ -236,28 +236,29 @@
         </div>
       </div>
     </div>
-    <form class="contact-form" onsubmit="handleSubmit(event)">
+    <form class="contact-form" action="https://formspree.io/f/xljjnqyw" method="POST" onsubmit="handleSubmit(event)">
+      <input type="hidden" name="_subject" value="New contact request – 4Sight Analytics">
       <div class="form-row">
         <div class="form-group">
           <label data-i18n="form.fname">First Name</label>
-          <input type="text" placeholder="Max" required>
+          <input type="text" name="first_name" placeholder="Max" required>
         </div>
         <div class="form-group">
           <label data-i18n="form.lname">Last Name</label>
-          <input type="text" placeholder="Müller" required>
+          <input type="text" name="last_name" placeholder="Müller" required>
         </div>
       </div>
       <div class="form-group">
         <label data-i18n="form.email">Business Email</label>
-        <input type="email" placeholder="max@company.com" required>
+        <input type="email" name="email" placeholder="max@company.com" required>
       </div>
       <div class="form-group">
         <label data-i18n="form.company">Company</label>
-        <input type="text" placeholder="ACME Manufacturing GmbH">
+        <input type="text" name="company" placeholder="ACME Manufacturing GmbH">
       </div>
       <div class="form-group">
         <label data-i18n="form.interest">Area of Interest</label>
-        <select>
+        <select name="interest">
           <option data-i18n="form.opt1">Predictive Maintenance</option>
           <option data-i18n="form.opt2">Quality Intelligence</option>
           <option data-i18n="form.opt3">Digital Twin</option>
@@ -268,7 +269,7 @@
       </div>
       <div class="form-group">
         <label data-i18n="form.message">Message</label>
-        <textarea placeholder="Describe your challenge..." data-i18n-placeholder="form.placeholder"></textarea>
+        <textarea name="message" placeholder="Describe your challenge..." data-i18n-placeholder="form.placeholder"></textarea>
       </div>
       <button type="submit" class="btn-primary" data-i18n="form.submit">Send Message</button>
     </form>
@@ -582,14 +583,26 @@ function initScrollReveal() {
 // ---- FORM SUBMIT ----
 function handleSubmit(e) {
   e.preventDefault();
-  const btn = e.target.querySelector('button[type="submit"]');
-  btn.textContent = '✓ Sent!';
-  btn.style.background = '#00d4aa';
-  setTimeout(() => {
-    btn.textContent = translations[currentLang]['form.submit'];
-    btn.style.background = '';
-    e.target.reset();
-  }, 3000);
+  const form = e.target;
+  const btn = form.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  fetch(form.action, {
+    method: 'POST',
+    body: new FormData(form),
+    headers: { Accept: 'application/json' }
+  })
+    .then(res => res.ok)
+    .catch(() => false)
+    .then(ok => {
+      btn.textContent = ok ? '✓ Sent!' : '✗ Error';
+      btn.style.background = ok ? '#00d4aa' : '#e5484d';
+      setTimeout(() => {
+        btn.textContent = translations[currentLang]['form.submit'];
+        btn.style.background = '';
+        btn.disabled = false;
+        if (ok) form.reset();
+      }, 3000);
+    });
 }
 
 // ---- INIT ----
