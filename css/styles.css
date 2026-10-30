@@ -353,6 +353,15 @@
     font-weight: 300;
   }
 
+  .service-tags {
+    margin-top: 1rem;
+    padding-right: 4rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    line-height: 1.6;
+  }
+
   .service-num {
     position: absolute;
     bottom: 1.5rem;

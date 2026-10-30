@@ -1,0 +1,65 @@
+# Com2WA configuration – copy to config.yaml and adjust.
+# Secrets (WA_TOKEN, WA_PHONE_NUMBER_ID) go into .env, never into this file.
+
+channel: console            # console (dry run) | meta_cloud
+meta_cloud:
+  use_templates: true       # business-initiated messages require approved templates
+  # api_version: v23.0      # or WA_API_VERSION in .env
+
+# REST API (com2wa-server). API key comes from COM2WA_API_KEY in .env
+api:
+  host: 127.0.0.1           # 0.0.0.0 to accept other machines on the LAN (set an API key!)
+  port: 8090
+  cors_origins: []          # e.g. ["http://localhost:8888"] to call the API from a browser dashboard
+
+outbox_path: com2wa_outbox.db
+outbox:
+  max_attempts: 8
+  base_backoff_s: 5
+  max_backoff_s: 600
+
+# Map catalog language -> WhatsApp template language code, if you registered e.g. en_US
+template_lang_codes: {de: de, es: es, en: en}
+
+defaults:
+  debounce_s: 5             # value must stay violated/OK this long before state changes
+  cooldown_s: 600           # min time between two alerts for the same signal
+  notify_on_clear: true     # send "resolved" message
+  rate_limit_per_min: 20    # global message cap; excess is summarised
+
+recipients:
+  - name: Operator Lab
+    phone: "+5215500000000"
+    lang: es
+    groups: [haas, ufactory]
+    min_severity: INFO        # INFO needed to receive the spindle demo alert
+  - name: Maintenance
+    phone: "+4915100000000"
+    lang: de
+    groups: [ufactory]
+    min_severity: WARNING
+    quiet_hours: [22, 6]      # CRITICAL alerts still go through
+
+rules:
+  # ---- UFactory 850 ---------------------------------------------------------
+  - {source: UF850, signal: warn_code, type: nonzero, severity: WARNING, group: ufactory,
+     label: {de: Warncode, es: Código de advertencia, en: Warning code}}
+  - {source: UF850, signal: "servo_temp_j*", type: threshold, op: ">", limit: 55, hysteresis: 3,
+     unit: "°C", severity: WARNING, group: ufactory,
+     label: {de: "Servotemperatur J{idx}", es: "Temperatura servo J{idx}", en: "Servo temperature J{idx}"}}
+  - {source: UF850, signal: "joint_usage_j*", type: threshold, op: ">", limit: 80, hysteresis: 5,
+     unit: "%", severity: WARNING, group: ufactory,
+     label: {de: "Gelenkbereich J{idx}", es: "Rango articulación J{idx}", en: "Joint range J{idx}"}}
+
+  # ---- Haas TM-1P -----------------------------------------------------------
+  - {source: HAAS_TM1P, signal: "tool_wear_len_t*", type: threshold, op: ">=", limit: 0.05,
+     unit: mm, severity: WARNING, group: haas, debounce_s: 0,
+     label: {de: "Längenverschleiß T{idx}", es: "Desgaste de longitud T{idx}", en: "Length wear T{idx}"}}
+  - {source: HAAS_TM1P, signal: "tool_wear_dia_t*", type: threshold, op: ">=", limit: 0.03,
+     unit: mm, severity: WARNING, group: haas, debounce_s: 0,
+     label: {de: "Durchmesserverschleiß T{idx}", es: "Desgaste de diámetro T{idx}", en: "Diameter wear T{idx}"}}
+
+  # Demo / show-effect: spindle above 4000 rpm (clears below 3800 rpm)
+  - {source: HAAS_TM1P, signal: spindle_speed, type: threshold, op: ">", limit: 4000, hysteresis: 200,
+     debounce_s: 2, cooldown_s: 60, unit: rpm, severity: INFO, group: haas,
+     label: {de: Spindeldrehzahl, es: Velocidad del husillo, en: Spindle speed}}
